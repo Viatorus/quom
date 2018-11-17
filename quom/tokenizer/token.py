@@ -2,13 +2,15 @@ from enum import Enum
 
 
 class TokenType(Enum):
-    IDENTIFIER = 0
-    SYMBOL = 1
-    NUMBER = 2
-    WHITESPACE = 3
-    PREPROCESSOR = 4
-    COMMENT = 5
-    QUOTE = 6
+    START = 0
+    IDENTIFIER = 1
+    SYMBOL = 2
+    NUMBER = 3
+    WHITESPACE = 4
+    PREPROCESSOR = 5
+    COMMENT = 6
+    QUOTE = 7
+    END = 8
 
 
 class Token:

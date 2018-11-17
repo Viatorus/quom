@@ -83,7 +83,7 @@ def scan_for_quote_double(tokens: List[Token], it: Iterator, it_end: Iterator):
     it += 1
 
     encoding = LiteralEncoding.NONE
-    if len(tokens) > 0 and tokens[-1].type == TokenType.IDENTIFIER:
+    if tokens[-1].type == TokenType.IDENTIFIER:
         encoding = to_literal_encoding(tokens[-1].identifier)
 
     if encoding in [LiteralEncoding.NONE, LiteralEncoding.WIDE, LiteralEncoding.UTF8, LiteralEncoding.UTF16,

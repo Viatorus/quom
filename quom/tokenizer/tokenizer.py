@@ -1,6 +1,6 @@
 from typing import List
 
-from .token import Token
+from .token import Token, TokenType
 from .identifier_tokenizer import scan_for_identifier
 from .comment_tokenizer import scan_for_comment
 from .number_tokenizer import scan_for_number
@@ -23,7 +23,7 @@ class Tokenizer:
         it = self._src.begin()
         it_end = self._src.end()
 
-        tokens = []
+        tokens = [Token(None, None, TokenType.START)]
 
         while it != it_end:
             succeeded = scan_for_whitespace(tokens, it, it_end)
@@ -40,7 +40,9 @@ class Tokenizer:
             if not succeeded:
                 succeeded = scan_for_symbol(tokens, it, it_end)
             if not succeeded:
-                raise Exception('Unknown token.')
+                raise Exception('Unknown syntax.')
+
+        tokens.append([Token(None, None, TokenType.END)])
 
     def get_source_code(self):
         return ''.join(self._src)

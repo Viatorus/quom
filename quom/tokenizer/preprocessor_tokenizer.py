@@ -68,7 +68,7 @@ def scan_for_line_end(tokens: List[Token], it: Iterator, it_end: Iterator):
         if not succeeded:
             succeeded = scan_for_preprocessor_symbol(tokens, it, it_end)
         if not succeeded:
-            raise Exception('Unknown token.')
+            raise Exception('Unknown syntax.')
 
 
 def scan_for_preprocessor_include(tokens: List[Token], it: Iterator, it_end: Iterator):
