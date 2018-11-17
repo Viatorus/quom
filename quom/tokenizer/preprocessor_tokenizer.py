@@ -108,7 +108,7 @@ def scan_for_preprocessor_include(tokens: List[Token], it: Iterator, it_end: Ite
 def scan_for_preprocessor(tokens: List[Token], it: Iterator, it_end: Iterator):
     if it[0] != '#':
         return None
-    start = it
+    start = it.copy()
     it += 1
 
     nested_tokens = []
@@ -116,10 +116,10 @@ def scan_for_preprocessor(tokens: List[Token], it: Iterator, it_end: Iterator):
         tokens.append(PreprocessorToken(start, it, PreprocessorType.NULL_DIRECTIVE))
         return True
 
-    # TODO: Not good
     name = scan_for_name(it, it_end)
     if not name:
         raise Exception('Illegal preprocessor instruction.')
+    name = ''.join(name)
 
     if name in ['if', 'ifdef', 'ifndef', 'elsif', 'pragma', 'warning', 'error', 'line', 'define', 'undef',
                 'else', 'endif']:
@@ -128,7 +128,7 @@ def scan_for_preprocessor(tokens: List[Token], it: Iterator, it_end: Iterator):
         scan_for_preprocessor_include(nested_tokens, it, it_end)
         scan_for_line_end(nested_tokens, it, it_end)
     else:
-        raise Exception('Unknown preprocessor directive.')
+        raise Exception('Unknown preprocessor directive: ' + name + '<-')
 
     tokens.append(PreprocessorToken(start, it, PreprocessorType.UNDEFINE))
     return True

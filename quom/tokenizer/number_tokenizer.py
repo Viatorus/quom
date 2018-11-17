@@ -69,7 +69,7 @@ def scan_for_binary(it: Iterator, it_end: Iterator):
 def scan_for_number(tokens: List[Token], it: Iterator, it_end: Iterator):
     if not it[0].isdigit() and (it[0] != '.' or not it[1].isdigit()):
         return False
-    start = it
+    start = it.copy()
     it += 1
 
     number_type = NumberType.DECIMAL

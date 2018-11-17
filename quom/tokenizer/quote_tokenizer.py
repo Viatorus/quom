@@ -55,7 +55,7 @@ def to_literal_encoding(identifier: str):
 def scan_for_quote_single(tokens: List[Token], it: Iterator, _: Iterator):
     if it[0] != '\'':
         return False
-    start = it
+    start = it.copy()
     it += 1
 
     # Parse until end of line or non escaped '.
@@ -79,12 +79,12 @@ def scan_for_quote_single(tokens: List[Token], it: Iterator, _: Iterator):
 def scan_for_quote_double(tokens: List[Token], it: Iterator, it_end: Iterator):
     if it[0] != '"':
         return None
-    start = it
+    start = it.copy()
     it += 1
 
     encoding = LiteralEncoding.NONE
-    if tokens[-1].type == TokenType.IDENTIFIER:
-        encoding = to_literal_encoding(tokens[-1].identifier)
+    if tokens[-1].token_type == TokenType.IDENTIFIER:
+        encoding = to_literal_encoding(tokens[-1].name)
 
     if encoding in [LiteralEncoding.NONE, LiteralEncoding.WIDE, LiteralEncoding.UTF8, LiteralEncoding.UTF16,
                     LiteralEncoding.UTF32]:

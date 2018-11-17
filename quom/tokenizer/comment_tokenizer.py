@@ -20,7 +20,7 @@ def scan_for_comment_cpp_style(tokens: List[Token], it: Iterator, _: Iterator):
     # C++-style comment: //
     if it[0] != '/' or it[1] != '/':
         return False
-    start = it
+    start = it.copy()
     it += 2
 
     # Parse until \n.
@@ -35,7 +35,7 @@ def scan_for_comment_c_style(tokens: List[Token], it: Iterator, it_end: Iterator
     # C-style comment: /*
     if it[0] != '/' or it[1] != '*':
         return False
-    start = it
+    start = it.copy()
     it += 2
 
     # Parse until file end or */.

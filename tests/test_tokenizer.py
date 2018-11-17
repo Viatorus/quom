@@ -1,4 +1,3 @@
-# Sample Test passing with nose and pytest
 from quom.tokenizer import Tokenizer
 
 
@@ -121,7 +120,7 @@ def test_number():
 
 
 def test_preprocessor():
-    tkz = Tokenizer("#pragma")
+    tkz = Tokenizer(" #pragma")
     tkz.tokenize()
 
     tkz = Tokenizer('#define')

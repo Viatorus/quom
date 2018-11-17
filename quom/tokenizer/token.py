@@ -1,5 +1,7 @@
 from enum import Enum
 
+from ..utils.iterable import Iterator
+
 
 class TokenType(Enum):
     START = 0
@@ -14,7 +16,7 @@ class TokenType(Enum):
 
 
 class Token:
-    def __init__(self, start, end, type: TokenType):
-        self.start = start
-        self.end = end
-        self.type = type
+    def __init__(self, start: Iterator, end: Iterator, token_type: TokenType):
+        self.start: Iterator = start.copy() if start is not None else None
+        self.end: Iterator = end.copy() if end is not None else None
+        self.token_type: TokenType = token_type
