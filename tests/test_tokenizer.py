@@ -127,10 +127,16 @@ def test_preprocessor():
     tkz = Tokenizer('#define')
     tkz.tokenize()
 
-    tkz = Tokenizer('#include "abc"')
+    tkz = Tokenizer('#include "abc" ')
     tkz.tokenize()
 
-    tkz = Tokenizer('#include <abc>')
+    tkz = Tokenizer('#include <abc> ')
+    tkz.tokenize()
+
+    tkz = Tokenizer('#define a(x) auto a##x = #x')
+    tkz.tokenize()
+
+    tkz = Tokenizer('#define eprintf(format, ...) fprintf (stderr, format, __VA_ARGS__)')
     tkz.tokenize()
 
 

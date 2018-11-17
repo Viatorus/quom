@@ -1,7 +1,9 @@
 from enum import Enum
 
+from quom.tokenizer.number_tokenizer import scan_for_number
+from quom.tokenizer.symbol_tokenizer import scan_for_symbol
 from .comment_tokenizer import scan_for_comment
-from .identifier_tokenizer import scan_for_name
+from .identifier_tokenizer import scan_for_name, scan_for_identifier
 from quom.utils.iterable import Iterator
 from .quote_tokenizer import scan_for_quote
 from .token import Token, TokenType
@@ -32,7 +34,7 @@ class PreprocessorToken(Token):
         self.preprocessor_type = type
 
 
-def skip_whitespace_and_comment(it: Iterator, it_end: Iterator):
+def scan_for_whitespaces_and_comments(it: Iterator, it_end: Iterator):
     while True:
         comment = scan_for_comment(it, it_end)
         if comment:
@@ -43,20 +45,35 @@ def skip_whitespace_and_comment(it: Iterator, it_end: Iterator):
                 return True
             continue
         break
+    return False
+
+
+def scan_for_preprocessor_symbol(it: Iterator, it_end: Iterator):
+    if it[0] != '#':
+        return
+    it += 1
+    return True
 
 
 def scan_for_line_end(it: Iterator, it_end: Iterator):
     while True:
-        if skip_whitespace_and_comment(it, it_end):
+        if scan_for_whitespaces_and_comments(it, it_end):
             return
-
-        # Todo literal encoding
-        if not scan_for_quote(it, it_end):
-            it += 1
+        token = scan_for_identifier(it, it_end)
+        if not token:
+            token = scan_for_quote(it, it_end)
+        if not token:
+            token = scan_for_number(it, it_end)
+        if not token:
+            token = scan_for_symbol(it, it_end)
+        if not token:
+            token = scan_for_preprocessor_symbol(it, it_end)
+        if not token:
+            raise Exception('Unknown token.')
 
 
 def scan_for_preprocessor_include(it: Iterator, it_end: Iterator):
-    if skip_whitespace_and_comment(it, it_end) or it[0] != '"' and it[0] != '<':
+    if scan_for_whitespaces_and_comments(it, it_end) or it[0] != '"' and it[0] != '<':
         raise Exception("Expected \"FILENAME\" or <FILENAME> after include!")
 
     if it[0] == '"':
@@ -95,7 +112,7 @@ def scan_for_preprocessor(it: Iterator, it_end: Iterator):
     start = it
     it += 1
 
-    if skip_whitespace_and_comment(it, it_end):
+    if scan_for_whitespaces_and_comments(it, it_end):
         return PreprocessorToken(start, it, PreprocessorType.NULL_DIRECTIVE)
 
     # TODO: Not good
@@ -108,6 +125,7 @@ def scan_for_preprocessor(it: Iterator, it_end: Iterator):
         scan_for_line_end(it, it_end)
     elif name == 'include':
         scan_for_preprocessor_include(it, it_end)
+        scan_for_line_end(it, it_end)
     else:
         raise Exception('Unknown preprocessor directive.')
 

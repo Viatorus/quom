@@ -24,9 +24,9 @@ class Tokenizer:
         it_end = self._src.end()
 
         while it != it_end:
-            token = scan_for_comment(it, it_end)
+            token = scan_for_whitespace(it, it_end)
             if not token:
-                token = scan_for_whitespace(it, it_end)
+                token = scan_for_comment(it, it_end)
             if not token:
                 token = scan_for_identifier(it, it_end)
             if not token:
