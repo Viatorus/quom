@@ -1,7 +1,8 @@
 from enum import Enum
+from typing import List
 
-from quom.utils.iterable import Iterator
 from .token import Token, TokenType
+from ..utils.iterable import Iterator
 
 
 class CommentType(Enum):
@@ -15,10 +16,10 @@ class CommentToken(Token):
         self.comment_type = type
 
 
-def scan_for_comment_cpp_style(it: Iterator, _: Iterator):
+def scan_for_comment_cpp_style(tokens: List[Token], it: Iterator, _: Iterator):
     # C++-style comment: //
     if it[0] != '/' or it[1] != '/':
-        return None
+        return False
     start = it
     it += 2
 
@@ -26,13 +27,14 @@ def scan_for_comment_cpp_style(it: Iterator, _: Iterator):
     while it[0] != '\n':
         it += 1
 
-    return CommentToken(start, it, CommentType.CPP_STYLE)
+    tokens.append(CommentToken(start, it, CommentType.CPP_STYLE))
+    return True
 
 
-def scan_for_comment_c_style(it: Iterator, it_end: Iterator):
+def scan_for_comment_c_style(tokens: List[Token], it: Iterator, it_end: Iterator):
     # C-style comment: /*
     if it[0] != '/' or it[1] != '*':
-        return None
+        return False
     start = it
     it += 2
 
@@ -44,11 +46,11 @@ def scan_for_comment_c_style(it: Iterator, it_end: Iterator):
         raise Exception("C-style comment not terminated!")
     it += 2
 
-    return CommentToken(start, it, CommentType.C_STYLE)
+    tokens.append(CommentToken(start, it, CommentType.C_STYLE))
+    return True
 
 
-def scan_for_comment(it: Iterator, it_end: Iterator):
-    token = scan_for_comment_cpp_style(it, it_end)
-    if not token:
-        token = scan_for_comment_c_style(it, it_end)
-    return token
+def scan_for_comment(tokens: List[Token], it: Iterator, it_end: Iterator):
+    if not scan_for_comment_cpp_style(tokens, it, it_end):
+        return scan_for_comment_c_style(tokens, it, it_end)
+    return True

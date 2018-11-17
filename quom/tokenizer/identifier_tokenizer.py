@@ -1,8 +1,9 @@
 from enum import Enum
+from typing import List
 
-from quom.utils.iterable import Iterator
 from .quote_tokenizer import scan_for_quote_double
 from .token import Token, TokenType
+from ..utils.iterable import Iterator
 
 
 class IdentifierType(Enum):
@@ -19,7 +20,7 @@ class IdentifierToken(Token):
 
 def scan_for_name(it: Iterator, it_end: Iterator):
     if not it[0].isalpha() and it[0] != '_':
-        return
+        return None
     name = [it[0]]
     it += 1
 
@@ -30,13 +31,10 @@ def scan_for_name(it: Iterator, it_end: Iterator):
     return ''.join(name)
 
 
-def scan_for_identifier(it: Iterator, it_end: Iterator):
+def scan_for_identifier(tokens: List[Token], it: Iterator, it_end: Iterator):
     start = it
     identifier = scan_for_name(it, it_end)
     if identifier:
-        end = it
-        if it[0] == '"':
-            scan_for_quote_double(it, it_end, identifier)
-
-        return IdentifierToken(start, end, IdentifierType.IDENTIFIER, identifier)
-    return None
+        tokens.append(IdentifierToken(start, it, IdentifierType.IDENTIFIER, identifier))
+        return True
+    return False

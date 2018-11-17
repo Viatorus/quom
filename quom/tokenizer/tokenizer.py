@@ -1,4 +1,4 @@
-from typing import List, Union
+from typing import List
 
 from .token import Token
 from .identifier_tokenizer import scan_for_identifier
@@ -23,21 +23,23 @@ class Tokenizer:
         it = self._src.begin()
         it_end = self._src.end()
 
+        tokens = []
+
         while it != it_end:
-            token = scan_for_whitespace(it, it_end)
-            if not token:
-                token = scan_for_comment(it, it_end)
-            if not token:
-                token = scan_for_identifier(it, it_end)
-            if not token:
-                token = scan_for_quote(it, it_end)
-            if not token:
-                token = scan_for_number(it, it_end)
-            if not token:
-                token = scan_for_preprocessor(it, it_end)
-            if not token:
-                token = scan_for_symbol(it, it_end)
-            if not token:
+            succeeded = scan_for_whitespace(tokens, it, it_end)
+            if not succeeded:
+                succeeded = scan_for_comment(tokens, it, it_end)
+            if not succeeded:
+                succeeded = scan_for_identifier(tokens, it, it_end)
+            if not succeeded:
+                succeeded = scan_for_quote(tokens, it, it_end)
+            if not succeeded:
+                succeeded = scan_for_number(tokens, it, it_end)
+            if not succeeded:
+                succeeded = scan_for_preprocessor(tokens, it, it_end)
+            if not succeeded:
+                succeeded = scan_for_symbol(tokens, it, it_end)
+            if not succeeded:
                 raise Exception('Unknown token.')
 
     def get_source_code(self):

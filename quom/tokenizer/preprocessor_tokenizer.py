@@ -1,13 +1,14 @@
 from enum import Enum
+from typing import List
 
-from quom.tokenizer.number_tokenizer import scan_for_number
-from quom.tokenizer.symbol_tokenizer import scan_for_symbol
 from .comment_tokenizer import scan_for_comment
 from .identifier_tokenizer import scan_for_name, scan_for_identifier
-from quom.utils.iterable import Iterator
+from .number_tokenizer import scan_for_number
 from .quote_tokenizer import scan_for_quote
+from .symbol_tokenizer import scan_for_symbol
 from .token import Token, TokenType
 from .whitespace_tokenizer import scan_for_whitespace, WhitespaceType
+from ..utils.iterable import Iterator
 
 
 class PreprocessorType(Enum):
@@ -34,46 +35,44 @@ class PreprocessorToken(Token):
         self.preprocessor_type = type
 
 
-def scan_for_whitespaces_and_comments(it: Iterator, it_end: Iterator):
+def scan_for_whitespaces_and_comments(tokens: List[Token], it: Iterator, it_end: Iterator):
     while True:
-        comment = scan_for_comment(it, it_end)
-        if comment:
+        if scan_for_comment(tokens, it, it_end):
             continue
-        whitespace = scan_for_whitespace(it, it_end)
-        if whitespace:
-            if whitespace.whitespace_type == WhitespaceType.LINE_BREAK:
+        if scan_for_whitespace(tokens, it, it_end):
+            if tokens[-1].whitespace_type == WhitespaceType.LINE_BREAK:
                 return True
             continue
         break
     return False
 
 
-def scan_for_preprocessor_symbol(it: Iterator, it_end: Iterator):
+def scan_for_preprocessor_symbol(tokens: List[Token], it: Iterator, it_end: Iterator):
     if it[0] != '#':
         return
     it += 1
     return True
 
 
-def scan_for_line_end(it: Iterator, it_end: Iterator):
+def scan_for_line_end(tokens: List[Token], it: Iterator, it_end: Iterator):
     while True:
-        if scan_for_whitespaces_and_comments(it, it_end):
+        if scan_for_whitespaces_and_comments(tokens, it, it_end):
             return
-        token = scan_for_identifier(it, it_end)
-        if not token:
-            token = scan_for_quote(it, it_end)
-        if not token:
-            token = scan_for_number(it, it_end)
-        if not token:
-            token = scan_for_symbol(it, it_end)
-        if not token:
-            token = scan_for_preprocessor_symbol(it, it_end)
-        if not token:
+        succeeded = scan_for_identifier(tokens, it, it_end)
+        if not succeeded:
+            succeeded = scan_for_quote(tokens, it, it_end)
+        if not succeeded:
+            succeeded = scan_for_number(tokens, it, it_end)
+        if not succeeded:
+            succeeded = scan_for_symbol(tokens, it, it_end)
+        if not succeeded:
+            succeeded = scan_for_preprocessor_symbol(tokens, it, it_end)
+        if not succeeded:
             raise Exception('Unknown token.')
 
 
-def scan_for_preprocessor_include(it: Iterator, it_end: Iterator):
-    if scan_for_whitespaces_and_comments(it, it_end) or it[0] != '"' and it[0] != '<':
+def scan_for_preprocessor_include(tokens: List[Token], it: Iterator, it_end: Iterator):
+    if scan_for_whitespaces_and_comments(tokens, it, it_end) or it[0] != '"' and it[0] != '<':
         raise Exception("Expected \"FILENAME\" or <FILENAME> after include!")
 
     if it[0] == '"':
@@ -106,14 +105,16 @@ def scan_for_preprocessor_include(it: Iterator, it_end: Iterator):
         it += 1
 
 
-def scan_for_preprocessor(it: Iterator, it_end: Iterator):
+def scan_for_preprocessor(tokens: List[Token], it: Iterator, it_end: Iterator):
     if it[0] != '#':
         return None
     start = it
     it += 1
 
-    if scan_for_whitespaces_and_comments(it, it_end):
-        return PreprocessorToken(start, it, PreprocessorType.NULL_DIRECTIVE)
+    nested_tokens = []
+    if scan_for_whitespaces_and_comments(nested_tokens, it, it_end):
+        tokens.append(PreprocessorToken(start, it, PreprocessorType.NULL_DIRECTIVE))
+        return True
 
     # TODO: Not good
     name = scan_for_name(it, it_end)
@@ -122,11 +123,12 @@ def scan_for_preprocessor(it: Iterator, it_end: Iterator):
 
     if name in ['if', 'ifdef', 'ifndef', 'elsif', 'pragma', 'warning', 'error', 'line', 'define', 'undef',
                 'else', 'endif']:
-        scan_for_line_end(it, it_end)
+        scan_for_line_end(nested_tokens, it, it_end)
     elif name == 'include':
-        scan_for_preprocessor_include(it, it_end)
-        scan_for_line_end(it, it_end)
+        scan_for_preprocessor_include(nested_tokens, it, it_end)
+        scan_for_line_end(nested_tokens, it, it_end)
     else:
         raise Exception('Unknown preprocessor directive.')
 
-    return PreprocessorToken(start, it, PreprocessorType.UNDEFINE)
+    tokens.append(PreprocessorToken(start, it, PreprocessorType.UNDEFINE))
+    return True

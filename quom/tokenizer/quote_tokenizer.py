@@ -1,7 +1,8 @@
 from enum import Enum
+from typing import List
 
-from quom.utils.iterable import Iterator
 from .token import Token, TokenType
+from ..utils.iterable import Iterator
 
 
 class LiteralEncoding(Enum):
@@ -51,9 +52,9 @@ def to_literal_encoding(identifier: str):
     raise Exception('Unknown literal encoding.')
 
 
-def scan_for_quote_single(it: Iterator, _: Iterator):
+def scan_for_quote_single(tokens: List[Token], it: Iterator, _: Iterator):
     if it[0] != '\'':
-        return None
+        return False
     start = it
     it += 1
 
@@ -71,18 +72,19 @@ def scan_for_quote_single(it: Iterator, _: Iterator):
         raise Exception("Character sequence not terminated!")
     it += 1
 
-    return QuoteToken(start, it, QuoteType.SINGLE)
+    tokens.append(QuoteToken(start, it, QuoteType.SINGLE))
+    return True
 
 
-def scan_for_quote_double(it: Iterator, it_end: Iterator, identifier: str = None):
+def scan_for_quote_double(tokens: List[Token], it: Iterator, it_end: Iterator):
     if it[0] != '"':
         return None
     start = it
     it += 1
 
     encoding = LiteralEncoding.NONE
-    if identifier:
-        encoding = to_literal_encoding(identifier)
+    if len(tokens) > 0 and tokens[-1].type == TokenType.IDENTIFIER:
+        encoding = to_literal_encoding(tokens[-1].identifier)
 
     if encoding in [LiteralEncoding.NONE, LiteralEncoding.WIDE, LiteralEncoding.UTF8, LiteralEncoding.UTF16,
                     LiteralEncoding.UTF32]:
@@ -126,11 +128,11 @@ def scan_for_quote_double(it: Iterator, it_end: Iterator, identifier: str = None
         if it == it_end:
             raise Exception('No terminating delimiter inside raw string literal found!')
 
-    return QuoteToken(start, it, QuoteType.Double, encoding)
+    tokens.append(QuoteToken(start, it, QuoteType.Double, encoding))
+    return True
 
 
-def scan_for_quote(it: Iterator, it_end: Iterator):
-    token = scan_for_quote_double(it, it_end)
-    if not token:
-        token = scan_for_quote_single(it, it_end)
-    return token
+def scan_for_quote(tokens: List[Token], it: Iterator, it_end: Iterator):
+    if not scan_for_quote_double(tokens, it, it_end):
+        return scan_for_quote_single(tokens, it, it_end)
+    return True

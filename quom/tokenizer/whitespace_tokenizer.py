@@ -1,7 +1,8 @@
 from enum import Enum
+from typing import List
 
-from quom.utils.iterable import Iterator
 from .token import Token, TokenType
+from ..utils.iterable import Iterator
 
 
 class WhitespaceType(Enum):
@@ -16,20 +17,22 @@ class WhitespaceToken(Token):
         self.whitespace_type = type
 
 
-WHITESPACE_CHARACTERS = [' ', '\t', '\v', '\f']
+WHITESPACE_CHARACTERS = ' \t\v\f'
 
 
-def scan_for_whitespace(it: Iterator, it_end: Iterator):
+def scan_for_whitespace(tokens: List[Token], it: Iterator, it_end: Iterator):
     if it[0] in WHITESPACE_CHARACTERS:
         start = it
+        it += 1
         while it != it_end and it[0] in WHITESPACE_CHARACTERS:
             it += 1
 
-        return WhitespaceToken(start, it, WhitespaceType.SPACE)
-
+        tokens.append(WhitespaceToken(start, it, WhitespaceType.SPACE))
+        return True
     elif it[0] == '\n':
         start = it
         it += 1
 
-        return WhitespaceToken(start, it, WhitespaceType.LINE_BREAK)
-    return None
+        tokens.append(WhitespaceToken(start, it, WhitespaceType.LINE_BREAK))
+        return True
+    return False

@@ -1,7 +1,8 @@
 from enum import Enum
+from typing import List
 
-from quom.utils.iterable import Iterator
 from .token import Token, TokenType
+from ..utils.iterable import Iterator
 
 
 class NumberType(Enum):
@@ -65,9 +66,9 @@ def scan_for_binary(it: Iterator, it_end: Iterator):
     return True
 
 
-def scan_for_number(it: Iterator, it_end: Iterator):
+def scan_for_number(tokens: List[Token], it: Iterator, it_end: Iterator):
     if not it[0].isdigit() and (it[0] != '.' or not it[1].isdigit()):
-        return None
+        return False
     start = it
     it += 1
 
@@ -135,4 +136,5 @@ def scan_for_number(it: Iterator, it_end: Iterator):
 
             scan_for_digit(it, it_end)
 
-    return NumberToken(start, it, number_type, precision)
+    tokens.append(NumberToken(start, it, number_type, precision))
+    return True
