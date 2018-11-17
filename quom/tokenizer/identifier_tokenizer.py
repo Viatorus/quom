@@ -17,7 +17,7 @@ class IdentifierToken(Token):
 
     @property
     def name(self) -> str:
-        return ''.join(self.start[:self.end.start])
+        return ''.join(self.start[:(self.end.pos - self.start.pos)])
 
 
 def scan_for_name(it: Iterator, it_end: Iterator):
@@ -28,8 +28,7 @@ def scan_for_name(it: Iterator, it_end: Iterator):
 
     while it[0].isalnum() or it[0] == '_':
         it += 1
-
-    return Iterator(start.base, start.start, it.start - start.start)
+    return start[:(it.pos - start.pos)]
 
 
 def scan_for_identifier(tokens: List[Token], it: Iterator, it_end: Iterator):

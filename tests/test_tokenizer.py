@@ -59,6 +59,9 @@ def test_whitespace():
     tkz = Tokenizer(' ')
     tkz.tokenize()
 
+    tkz = Tokenizer(' \t')
+    tkz.tokenize()
+
     tkz = Tokenizer('\t')
     tkz.tokenize()
 
@@ -72,6 +75,9 @@ def test_whitespace():
     tkz.tokenize()
 
     tkz = Tokenizer('\n')
+    tkz.tokenize()
+
+    tkz = Tokenizer(' \n ')
     tkz.tokenize()
 
 
@@ -110,6 +116,15 @@ def test_quote_double():
     tkz = Tokenizer("LR\"=(a)bc)=\"")
     tkz.tokenize()
 
+    tkz = Tokenizer("u\"(abc)\"")
+    tkz.tokenize()
+
+    tkz = Tokenizer("U\"(abc)\"")
+    tkz.tokenize()
+
+    tkz = Tokenizer("L\"(abc)\"")
+    tkz.tokenize()
+
 
 def test_number():
     tkz = Tokenizer("12")
@@ -120,6 +135,12 @@ def test_number():
 
 
 def test_preprocessor():
+    tkz = Tokenizer("#")
+    tkz.tokenize()
+
+    tkz = Tokenizer("#pragma")
+    tkz.tokenize()
+
     tkz = Tokenizer(" #pragma")
     tkz.tokenize()
 
@@ -129,6 +150,9 @@ def test_preprocessor():
     tkz = Tokenizer('#include "abc" ')
     tkz.tokenize()
 
+    tkz = Tokenizer('#include "abc\\"" ')
+    tkz.tokenize()
+
     tkz = Tokenizer('#include <abc> ')
     tkz.tokenize()
 
@@ -136,6 +160,9 @@ def test_preprocessor():
     tkz.tokenize()
 
     tkz = Tokenizer('#define eprintf(format, ...) fprintf (stderr, format, __VA_ARGS__)')
+    tkz.tokenize()
+
+    tkz = Tokenizer('# /* abc */ define  /* test */')
     tkz.tokenize()
 
 

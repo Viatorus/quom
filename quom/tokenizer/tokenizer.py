@@ -75,7 +75,7 @@ class Tokenizer:
                     # Go back two characters (to the backslash).
                     write_it -= 2
                     # Save wrapped line position.
-                    self._wrapped_position.append(write_it.start + 1)
+                    self._wrapped_position.append(write_it.pos + 1)
                 else:
                     it[0] = '\n'
 
@@ -113,4 +113,4 @@ class Tokenizer:
                 write_it += 1
             write_it[0] = '\n'
 
-        self._src = Iterable(src[:write_it.start + 1])
+        self._src = Iterable(src[:write_it.pos + 1])
