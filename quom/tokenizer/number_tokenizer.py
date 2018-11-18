@@ -18,9 +18,9 @@ class Precision(Enum):
 
 
 class NumberToken(Token):
-    def __init__(self, start, end, type: NumberType, precision: Precision):
+    def __init__(self, start, end, number_type: NumberType, precision: Precision):
         super().__init__(start, end, TokenType.NUMBER)
-        self.number_type = type
+        self.number_type = number_type
         self.precision = precision
 
 

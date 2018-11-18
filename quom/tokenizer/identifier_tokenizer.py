@@ -11,12 +11,12 @@ class IdentifierType(Enum):
 
 
 class IdentifierToken(Token):
-    def __init__(self, start, end, type: IdentifierType):
+    def __init__(self, start, end, identifier_type: IdentifierType):
         super().__init__(start, end, TokenType.IDENTIFIER)
-        self.identifier_type = type
+        self.identifier_type = identifier_type
 
     @property
-    def name(self) -> str:
+    def identifier_name(self) -> str:
         return ''.join(self.start[:(self.end.pos - self.start.pos)])
 
 

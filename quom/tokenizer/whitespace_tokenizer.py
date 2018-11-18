@@ -12,9 +12,9 @@ class WhitespaceType(Enum):
 
 
 class WhitespaceToken(Token):
-    def __init__(self, start, end, type: WhitespaceType):
+    def __init__(self, start, end, whitespace_type: WhitespaceType):
         super().__init__(start, end, TokenType.WHITESPACE)
-        self.whitespace_type = type
+        self.whitespace_type = whitespace_type
 
 
 WHITESPACE_CHARACTERS = ' \t\v\f'

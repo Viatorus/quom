@@ -30,9 +30,10 @@ class PreprocessorType(Enum):
 
 
 class PreprocessorToken(Token):
-    def __init__(self, start, end, type: PreprocessorType):
+    def __init__(self, start, end, preprocessor_type: PreprocessorType, tokens: List[Token]):
         super().__init__(start, end, TokenType.PREPROCESSOR)
-        self.preprocessor_type = type
+        self.preprocessor_type = preprocessor_type
+        self.preprocessor_tokens = tokens
 
 
 def scan_for_whitespaces_and_comments(tokens: List[Token], it: Iterator, it_end: Iterator):
@@ -111,9 +112,9 @@ def scan_for_preprocessor(tokens: List[Token], it: Iterator, it_end: Iterator):
     start = it.copy()
     it += 1
 
-    nested_tokens = []
-    if scan_for_whitespaces_and_comments(nested_tokens, it, it_end):
-        tokens.append(PreprocessorToken(start, it, PreprocessorType.NULL_DIRECTIVE))
+    preprocessor_tokens = []
+    if scan_for_whitespaces_and_comments(preprocessor_tokens, it, it_end):
+        tokens.append(PreprocessorToken(start, it, PreprocessorType.NULL_DIRECTIVE, preprocessor_tokens))
         return True
 
     name = scan_for_name(it, it_end)
@@ -123,12 +124,12 @@ def scan_for_preprocessor(tokens: List[Token], it: Iterator, it_end: Iterator):
 
     if name in ['if', 'ifdef', 'ifndef', 'elsif', 'pragma', 'warning', 'error', 'line', 'define', 'undef',
                 'else', 'endif']:
-        scan_for_line_end(nested_tokens, it, it_end)
+        scan_for_line_end(preprocessor_tokens, it, it_end)
     elif name == 'include':
-        scan_for_preprocessor_include(nested_tokens, it, it_end)
-        scan_for_line_end(nested_tokens, it, it_end)
+        scan_for_preprocessor_include(preprocessor_tokens, it, it_end)
+        scan_for_line_end(preprocessor_tokens, it, it_end)
     else:
         raise Exception('Unknown preprocessor directive: ' + name + '<-')
 
-    tokens.append(PreprocessorToken(start, it, PreprocessorType.UNDEFINE))
+    tokens.append(PreprocessorToken(start, it, PreprocessorType.UNDEFINE, preprocessor_tokens))
     return True

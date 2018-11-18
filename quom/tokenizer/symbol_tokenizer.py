@@ -10,9 +10,9 @@ class SymbolType(Enum):
 
 
 class SymbolToken(Token):
-    def __init__(self, start, end, type: SymbolType):
+    def __init__(self, start, end, symbol_type: SymbolType):
         super().__init__(start, end, TokenType.SYMBOL)
-        self.comment_type = type
+        self.comment_type = symbol_type
 
 
 def scan_for_symbol(tokens: List[Token], it: Iterator, it_end: Iterator):

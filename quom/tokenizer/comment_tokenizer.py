@@ -11,9 +11,9 @@ class CommentType(Enum):
 
 
 class CommentToken(Token):
-    def __init__(self, start, end, type: CommentType):
+    def __init__(self, start, end, comment_type: CommentType):
         super().__init__(start, end, TokenType.COMMENT)
-        self.comment_type = type
+        self.comment_type = comment_type
 
 
 def scan_for_comment_cpp_style(tokens: List[Token], it: Iterator, _: Iterator):

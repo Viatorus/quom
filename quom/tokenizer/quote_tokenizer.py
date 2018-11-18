@@ -24,10 +24,10 @@ class QuoteType(Enum):
 
 
 class QuoteToken(Token):
-    def __init__(self, start, end, type: QuoteType, encoding: LiteralEncoding = None):
+    def __init__(self, start, end, quote_type: QuoteType, literal_encoding: LiteralEncoding = None):
         super().__init__(start, end, TokenType.QUOTE)
-        self.quote_type = type
-        self.encoding = encoding
+        self.quote_type = quote_type
+        self.literal_encoding = literal_encoding
 
 
 def to_literal_encoding(identifier: str):
@@ -82,12 +82,12 @@ def scan_for_quote_double(tokens: List[Token], it: Iterator, it_end: Iterator):
     start = it.copy()
     it += 1
 
-    encoding = LiteralEncoding.NONE
+    literal_encoding = LiteralEncoding.NONE
     if tokens[-1].token_type == TokenType.IDENTIFIER:
-        encoding = to_literal_encoding(tokens[-1].name)
+        literal_encoding = to_literal_encoding(tokens[-1].identifier_name)
 
-    if encoding in [LiteralEncoding.NONE, LiteralEncoding.WIDE, LiteralEncoding.UTF8, LiteralEncoding.UTF16,
-                    LiteralEncoding.UTF32]:
+    if literal_encoding in [LiteralEncoding.NONE, LiteralEncoding.WIDE, LiteralEncoding.UTF8, LiteralEncoding.UTF16,
+                            LiteralEncoding.UTF32]:
         # Parse until end of line or non escaped ".
         backslashes = 0
         while it[0] != '\n' and (it[0] != '"' or backslashes % 2 != 0):
@@ -128,7 +128,7 @@ def scan_for_quote_double(tokens: List[Token], it: Iterator, it_end: Iterator):
         if it == it_end:
             raise Exception('No terminating delimiter inside raw string literal found!')
 
-    tokens.append(QuoteToken(start, it, QuoteType.Double, encoding))
+    tokens.append(QuoteToken(start, it, QuoteType.Double, literal_encoding))
     return True
 
 
