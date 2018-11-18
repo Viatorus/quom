@@ -1,11 +1,12 @@
 from typing import List
 
-from .token import Token, TokenType
 from .identifier_tokenizer import scan_for_identifier
 from .comment_tokenizer import scan_for_comment
 from .number_tokenizer import scan_for_number
 from .preprocessor_tokenizer import scan_for_preprocessor
 from .quote_tokenizer import scan_for_quote
+from .token import Token, TokenType
+from .tokenize_error import TokenizeError
 from .symbol_tokenizer import scan_for_symbol
 from .whitespace_tokenizer import scan_for_whitespace
 from ..utils.iterable import Iterable
@@ -40,7 +41,7 @@ class Tokenizer:
             if not succeeded:
                 succeeded = scan_for_symbol(tokens, it, it_end)
             if not succeeded:
-                raise Exception('Unknown syntax.')
+                raise TokenizeError('Unknown syntax.', it)
 
         tokens.append([Token(None, None, TokenType.END)])
 

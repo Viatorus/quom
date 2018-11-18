@@ -40,10 +40,10 @@ def scan_for_comment_c_style(tokens: List[Token], it: Iterator, it_end: Iterator
     it += 2
 
     # Parse until file end or */.
-    while (it - 1) != it_end and (it[0] != '*' or it[1] != '/'):
+    while (it + 1) != it_end and (it[0] != '*' or it[1] != '/'):
         it += 1
 
-    if (it - 1) == it_end:
+    if (it + 1) == it_end:
         raise TokenizeError("C-style comment not terminated!", it)
     it += 2
 

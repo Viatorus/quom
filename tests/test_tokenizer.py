@@ -1,4 +1,6 @@
-from quom.tokenizer import Tokenizer
+import pytest
+
+from quom.tokenizer import Tokenizer, TokenizeError
 
 
 def test_line_ending():
@@ -54,6 +56,18 @@ def test_comments_c_style():
     tkz = Tokenizer('/*ab*/')
     tkz.tokenize()
 
+    with pytest.raises(TokenizeError):
+        tkz = Tokenizer('/*a')
+        tkz.tokenize()
+
+    with pytest.raises(TokenizeError):
+        tkz = Tokenizer('/*a*')
+        tkz.tokenize()
+
+    with pytest.raises(TokenizeError):
+        tkz = Tokenizer('/*a* /')
+        tkz.tokenize()
+
 
 def test_whitespace():
     tkz = Tokenizer(' ')
@@ -99,6 +113,10 @@ def test_quote_single():
     tkz = Tokenizer('\'a\\\'bc\'')
     tkz.tokenize()
 
+    with pytest.raises(TokenizeError):
+        tkz = Tokenizer('\'a')
+        tkz.tokenize()
+
 
 def test_quote_double():
     tkz = Tokenizer("\"abc\"")
@@ -125,13 +143,13 @@ def test_quote_double():
     tkz = Tokenizer("L\"(abc)\"")
     tkz.tokenize()
 
+    with pytest.raises(TokenizeError):
+        tkz = Tokenizer('\"a')
+        tkz.tokenize()
 
-def test_number():
-    tkz = Tokenizer("12")
-    tkz.tokenize()
-
-    tkz = Tokenizer(".1")
-    tkz.tokenize()
+    with pytest.raises(TokenizeError):
+        tkz = Tokenizer('a\"a')
+        tkz.tokenize()
 
 
 def test_preprocessor():
@@ -167,7 +185,20 @@ def test_preprocessor():
 
 
 def test_symbol():
-    tkz = Tokenizer('+')
+    for symbol in "+-*/%<>&!=?.,[]{}():|":
+        tkz = Tokenizer(symbol)
+        tkz.tokenize()
+
+    with pytest.raises(TokenizeError):
+        tkz = Tokenizer('$')
+        tkz.tokenize()
+
+
+def test_number():
+    tkz = Tokenizer("12")
+    tkz.tokenize()
+
+    tkz = Tokenizer(".1")
     tkz.tokenize()
 
 

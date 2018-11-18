@@ -16,7 +16,7 @@ class WhitespaceToken(Token):
         super().__init__(start, end, TokenType.WHITESPACE)
         self.whitespace_type = whitespace_type
 
-
+0
 WHITESPACE_CHARACTERS = ' \t\v\f'
 
 
