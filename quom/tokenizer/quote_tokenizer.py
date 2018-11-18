@@ -1,7 +1,9 @@
 from enum import Enum
 from typing import List
 
+from .identifier_tokenizer import IdentifierToken
 from .token import Token, TokenType
+from .tokenize_error import TokenizeError
 from ..utils.iterable import Iterator
 
 
@@ -30,26 +32,27 @@ class QuoteToken(Token):
         self.literal_encoding = literal_encoding
 
 
-def to_literal_encoding(identifier: str):
-    if identifier == 'u8':
+def to_literal_encoding(identifier: IdentifierToken):
+    name = identifier.identifier_name
+    if name == 'u8':
         return LiteralEncoding.UTF8
-    elif identifier == 'u':
+    elif name == 'u':
         return LiteralEncoding.UTF16
-    elif identifier == 'U':
+    elif name == 'U':
         return LiteralEncoding.UTF32
-    elif identifier == 'L':
+    elif name == 'L':
         return LiteralEncoding.WIDE
-    elif identifier == 'R':
+    elif name == 'R':
         return LiteralEncoding.RAW
-    elif identifier == 'u8R':
+    elif name == 'u8R':
         return LiteralEncoding.RAW_UTF8
-    elif identifier == 'uR':
+    elif name == 'uR':
         return LiteralEncoding.RAW_UTF16
-    elif identifier == 'UR':
+    elif name == 'UR':
         return LiteralEncoding.RAW_UTF32
-    elif identifier == 'LR':
+    elif name == 'LR':
         return LiteralEncoding.RAW_WIDE
-    raise Exception('Unknown literal encoding.')
+    raise TokenizeError('Unknown literal encoding.', identifier.start)
 
 
 def scan_for_quote_single(tokens: List[Token], it: Iterator, _: Iterator):
@@ -69,7 +72,7 @@ def scan_for_quote_single(tokens: List[Token], it: Iterator, _: Iterator):
 
     # Check if end of line is reached.
     if it[0] == '\n':
-        raise Exception("Character sequence not terminated!")
+        raise TokenizeError("Character sequence not terminated!", it)
     it += 1
 
     tokens.append(QuoteToken(start, it, QuoteType.SINGLE))
@@ -84,7 +87,7 @@ def scan_for_quote_double(tokens: List[Token], it: Iterator, it_end: Iterator):
 
     literal_encoding = LiteralEncoding.NONE
     if tokens[-1].token_type == TokenType.IDENTIFIER:
-        literal_encoding = to_literal_encoding(tokens[-1].identifier_name)
+        literal_encoding = to_literal_encoding(tokens[-1])
 
     if literal_encoding in [LiteralEncoding.NONE, LiteralEncoding.WIDE, LiteralEncoding.UTF8, LiteralEncoding.UTF16,
                             LiteralEncoding.UTF32]:
@@ -99,7 +102,7 @@ def scan_for_quote_double(tokens: List[Token], it: Iterator, it_end: Iterator):
 
         # Check if end of line is reached.
         if it[0] == '\n':
-            raise Exception("Character sequence not terminated!")
+            raise TokenizeError("Character sequence not terminated!", it)
         it += 1
     else:
         delimiter = ""
@@ -110,7 +113,7 @@ def scan_for_quote_double(tokens: List[Token], it: Iterator, it_end: Iterator):
             it += 1
 
         if it == it_end:
-            raise Exception('No introductory delimiter inside raw string literal found!')
+            raise TokenizeError('No introductory delimiter inside raw string literal found!', it)
         it += 1
 
         # Define terminating delimiter.
@@ -126,7 +129,7 @@ def scan_for_quote_double(tokens: List[Token], it: Iterator, it_end: Iterator):
                 break
 
         if it == it_end:
-            raise Exception('No terminating delimiter inside raw string literal found!')
+            raise TokenizeError('No terminating delimiter inside raw string literal found!', it)
 
     tokens.append(QuoteToken(start, it, QuoteType.Double, literal_encoding))
     return True

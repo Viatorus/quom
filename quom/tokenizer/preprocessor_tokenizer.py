@@ -7,6 +7,7 @@ from .number_tokenizer import scan_for_number
 from .quote_tokenizer import scan_for_quote
 from .symbol_tokenizer import scan_for_symbol
 from .token import Token, TokenType
+from .tokenize_error import TokenizeError
 from .whitespace_tokenizer import scan_for_whitespace, WhitespaceType
 from ..utils.iterable import Iterator
 
@@ -69,12 +70,12 @@ def scan_for_line_end(tokens: List[Token], it: Iterator, it_end: Iterator):
         if not succeeded:
             succeeded = scan_for_preprocessor_symbol(tokens, it, it_end)
         if not succeeded:
-            raise Exception('Unknown syntax.')
+            raise TokenizeError('Unknown syntax.', it)
 
 
 def scan_for_preprocessor_include(tokens: List[Token], it: Iterator, it_end: Iterator):
     if scan_for_whitespaces_and_comments(tokens, it, it_end) or it[0] != '"' and it[0] != '<':
-        raise Exception("Expected \"FILENAME\" or <FILENAME> after include!")
+        raise TokenizeError("Expected \"FILENAME\" or <FILENAME> after include!", it)
 
     if it[0] == '"':
         it += 1
@@ -90,7 +91,7 @@ def scan_for_preprocessor_include(tokens: List[Token], it: Iterator, it_end: Ite
 
         # Check if end of line is reached.
         if it[0] == '\n':
-            raise Exception("Character sequence not terminated!")
+            raise TokenizeError("Character sequence not terminated!", it)
         it += 1
 
     elif it[0] == '<':
@@ -102,7 +103,7 @@ def scan_for_preprocessor_include(tokens: List[Token], it: Iterator, it_end: Ite
 
         # Check if end of line is reached.
         if it[0] == '\n':
-            raise Exception("Character sequence not terminated!")
+            raise TokenizeError("Character sequence not terminated!", it)
         it += 1
 
 
@@ -119,7 +120,7 @@ def scan_for_preprocessor(tokens: List[Token], it: Iterator, it_end: Iterator):
 
     name = scan_for_name(it, it_end)
     if not name:
-        raise Exception('Illegal preprocessor instruction.')
+        raise TokenizeError('Illegal preprocessor instruction.', start + 1)
     name = ''.join(name)
 
     if name in ['if', 'ifdef', 'ifndef', 'elsif', 'pragma', 'warning', 'error', 'line', 'define', 'undef',
@@ -129,7 +130,7 @@ def scan_for_preprocessor(tokens: List[Token], it: Iterator, it_end: Iterator):
         scan_for_preprocessor_include(preprocessor_tokens, it, it_end)
         scan_for_line_end(preprocessor_tokens, it, it_end)
     else:
-        raise Exception('Unknown preprocessor directive: ' + name + '<-')
+        raise TokenizeError('Unknown preprocessor directive: ' + name + '<-', it)
 
     tokens.append(PreprocessorToken(start, it, PreprocessorType.UNDEFINE, preprocessor_tokens))
     return True

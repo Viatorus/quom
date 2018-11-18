@@ -2,6 +2,7 @@ from enum import Enum
 from typing import List
 
 from .token import Token, TokenType
+from .tokenize_error import TokenizeError
 from ..utils.iterable import Iterator
 
 
@@ -33,7 +34,7 @@ def scan_for_digit(it: Iterator, it_end: Iterator):
         it += 1
 
     if it[-1] == '\'':
-        raise Exception("Digit separator does not adjacent to digit!")
+        raise TokenizeError("Digit separator does not adjacent to digit!", it)
 
     return True
 
@@ -47,7 +48,7 @@ def scan_for_hexadecimal(it: Iterator, it_end: Iterator):
         it += 1
 
     if it[-1] == '\'':
-        raise Exception("Digit separator does not adjacent to digit!")
+        raise TokenizeError("Digit separator does not adjacent to digit!", it)
 
     return True
 
@@ -61,7 +62,7 @@ def scan_for_binary(it: Iterator, it_end: Iterator):
         it += 1
 
     if it[-1] == '\'':
-        raise Exception("Digit separator does not adjacent to digit!")
+        raise TokenizeError("Digit separator does not adjacent to digit!", it)
 
     return True
 
@@ -89,7 +90,7 @@ def scan_for_number(tokens: List[Token], it: Iterator, it_end: Iterator):
             scan_for_hexadecimal(it, it_end)
 
             if it[0] not in ['p', 'P']:
-                raise Exception('Hexadecimal floating constants require an exponent!')
+                raise TokenizeError('Hexadecimal floating constants require an exponent!', it)
 
         if it[0] in ['p', 'P']:
             it += 1

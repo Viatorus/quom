@@ -2,6 +2,7 @@ from enum import Enum
 from typing import List
 
 from .token import Token, TokenType
+from .tokenize_error import TokenizeError
 from ..utils.iterable import Iterator
 
 
@@ -43,7 +44,7 @@ def scan_for_comment_c_style(tokens: List[Token], it: Iterator, it_end: Iterator
         it += 1
 
     if (it - 1) == it_end:
-        raise Exception("C-style comment not terminated!")
+        raise TokenizeError("C-style comment not terminated!", it)
     it += 2
 
     tokens.append(CommentToken(start, it, CommentType.C_STYLE))
