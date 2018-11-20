@@ -4,7 +4,7 @@ from typing import List
 from .identifier_tokenizer import IdentifierToken
 from .token import Token, TokenType
 from .tokenize_error import TokenizeError
-from ..utils.iterable import Iterator
+from quom.tokenizer.iterator import Iterator
 
 
 class LiteralEncoding(Enum):

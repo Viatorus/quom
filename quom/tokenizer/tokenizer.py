@@ -9,7 +9,7 @@ from .token import Token, TokenType
 from .tokenize_error import TokenizeError
 from .symbol_tokenizer import scan_for_symbol
 from .whitespace_tokenizer import scan_for_whitespace
-from ..utils.iterable import Iterable
+from quom.tokenizer.iterator import Iterable
 
 
 class Tokenizer:

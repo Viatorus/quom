@@ -9,7 +9,7 @@ from .symbol_tokenizer import scan_for_symbol
 from .token import Token, TokenType
 from .tokenize_error import TokenizeError
 from .whitespace_tokenizer import scan_for_whitespace, WhitespaceType
-from ..utils.iterable import Iterator
+from quom.tokenizer.iterator import Iterator
 
 
 class PreprocessorType(Enum):

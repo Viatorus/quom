@@ -2,7 +2,7 @@ from enum import Enum
 from typing import List
 
 from .token import Token, TokenType
-from ..utils.iterable import Iterator
+from quom.tokenizer.iterator import Iterator
 
 
 class IdentifierType(Enum):

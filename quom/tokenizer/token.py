@@ -1,6 +1,6 @@
 from enum import Enum
 
-from ..utils.iterable import Iterator
+from quom.tokenizer.iterator import Iterator
 
 
 class TokenType(Enum):
