@@ -5,48 +5,22 @@ from quom.tokenizer.iterator import Iterator
 
 
 def check_iterator(it, res):
-    prv = None
-    crr = res[0] if len(res) > 0 else None
-    nxt = res[1] if len(res) > 1 else None
+    crr = None
 
-    assert it.prv is None
-    assert it.crr == crr
-    assert it.nxt == nxt
+    assert it.prev is None
+    assert it.curr is None
 
-    for c in res[2:]:
-        it.step()
+    for c in res:
+        next(it)
 
         prv = crr
-        crr = nxt
-        nxt = c
+        crr = c
 
-        assert it.prv == prv
-        assert it.crr == crr
-        assert it.nxt == nxt
+        assert it.prev == prv
+        assert it.curr == crr
 
-    it.step()
-
-    assert it.prv == crr
-    assert it.crr == nxt
-    assert it.nxt is None
-
-    it.step()
-
-    assert it.prv == nxt
-    assert it.crr is None
-    assert it.nxt is None
-
-    it.step()
-
-    assert it.prv is None
-    assert it.crr is None
-    assert it.nxt is None
-
-    it.step()
-
-    assert it.prv is None
-    assert it.crr is None
-    assert it.nxt is None
+    with pytest.raises(StopIteration):
+        next(it)
 
 
 def test_linefeed():
@@ -103,24 +77,123 @@ def test_line_wrap():
 
     # Stray at file end
     it = Iterator("a\\\\\\")
-    check_iterator(it, "a\\")
-
-
-def test_escape_sequence():
-    it = Iterator("ab\\e")
     with pytest.raises(TokenizeError):
-        it.step()
+        check_iterator(it, "a\\")
+
+
+def test_stray_sequence():
+    it = Iterator("ab\\e")
+    next(it)
+    next(it)
+    with pytest.raises(TokenizeError):
+        next(it)
 
     it = Iterator("ab\\e")
-    it.step(escape=True)
-    assert it.crr == 'b'
-    assert it.nxt == '\\'
+    next(it)
+    next(it)
+    it._step(escape_characters=True)
+    assert it.prev == 'b'
+    assert it.curr == '\\'
 
-    it.step()
+    next(it)
 
-    assert it.crr == '\\'
-    assert it.nxt == 'e'
+    assert it.prev == '\\'
+    assert it.curr == 'e'
 
-    # TODO.
-    #with pytest.raises(TokenizeError):
+    it = Iterator('\\')
+    with pytest.raises(TokenizeError):
+        next(it)
+
+
+def test_escape():
     it = Iterator("\"\\a")
+    next(it)
+    with pytest.raises(TokenizeError):
+        next(it)
+
+    it = Iterator('"\\a')
+    next(it)
+    it._step(escape_characters=True)
+
+    assert it.prev == '"'
+    assert it.curr == '\\'
+
+    next(it)
+
+    assert it.prev == '\\'
+    assert it.curr == 'a'
+
+    it = Iterator("//\\\nd")
+    next(it)
+    next(it)
+
+    assert it.prev == '/'
+    assert it.curr == '/'
+
+    it._step(escape_characters=True)
+
+    assert it.prev == '/'
+    assert it.curr == 'd'
+
+    it = Iterator("//\\\n\\d")
+    next(it)
+    next(it)
+
+    assert it.prev == '/'
+    assert it.curr == '/'
+
+    it._step(escape_characters=True)
+
+    assert it.prev == '/'
+    assert it.curr == '\\'
+
+    next(it)
+
+    assert it.prev == '\\'
+    assert it.curr == 'd'
+
+
+def test_ingore_line_wrapping():
+    it = Iterator('a\\\nb')
+    check_iterator(it, 'ab')
+
+    it = Iterator('a\\\nb')
+    next(it)
+    it._step(ignore_line_wrapping=True, escape_characters=True)
+
+    assert it.prev == 'a'
+    assert it.curr == '\\'
+
+    next(it)
+
+    assert it.prev == '\\'
+    assert it.curr == '\n'
+
+    next(it)
+
+    assert it.prev == '\n'
+    assert it.curr == 'b'
+
+
+def test_ingore_line_wrapping_and_escape():
+    it = Iterator('a\\\n\\b')
+    next(it)
+    it._step(ignore_line_wrapping=True, escape_characters=True)
+
+    assert it.prev == 'a'
+    assert it.curr == '\\'
+
+    next(it)
+
+    assert it.prev == '\\'
+    assert it.curr == '\n'
+
+    it._step(ignore_line_wrapping=True, escape_characters=True)
+
+    assert it.prev == '\n'
+    assert it.curr == '\\'
+
+    next(it)
+
+    assert it.prev == '\\'
+    assert it.curr == 'b'
