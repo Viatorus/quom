@@ -2,7 +2,7 @@ from enum import Enum
 from typing import List
 
 from .identifier_tokenizer import IdentifierToken
-from .iterator import CodeIterator, EscapeIterator, Span
+from .iterator import CodeIterator, EscapeIterator
 from .token import Token, TokenType
 from .tokenize_error import TokenizeError
 
@@ -26,8 +26,8 @@ class QuoteType(Enum):
 
 
 class QuoteToken(Token):
-    def __init__(self, start, quote_type: QuoteType, literal_encoding: LiteralEncoding = None):
-        super().__init__(start, TokenType.QUOTE)
+    def __init__(self, start, end, quote_type: QuoteType, literal_encoding: LiteralEncoding = None):
+        super().__init__(start, end, TokenType.QUOTE)
         self.quote_type = quote_type
         self.literal_encoding = literal_encoding
 
@@ -130,7 +130,7 @@ def scan_for_quote_double(tokens: List[Token], it: CodeIterator):
         if it == it_end:
             raise TokenizeError('No terminating delimiter inside raw string literal found!', it)
 
-    tokens.append(QuoteToken(Span(start, it), QuoteType.Double, literal_encoding))
+    tokens.append(QuoteToken(start, it, QuoteType.Double, literal_encoding))
     return True
 
 

@@ -9,23 +9,24 @@ class Iterator:
 
 
 class Span:
-    def __init__(self, start: 'RawIterator', end: 'RawIterator'):
-        self._src = start._it.src
-        self._pos = start._it.curr
-        self._length = min(end._it.curr - start._it.curr + 1, len(self._src))
+    def __init__(self, start: 'RawIterator', end: 'RawIterator' = None):
+        self.it = start.copy()
+        if end and end._it.curr < len(self.it):
+            self._length = end._it.curr - start._it.curr + 1
+        else:
+            self._length = len(self.it)
 
     def __len__(self):
         return self._length
 
     def __iter__(self):
-        return copy.copy(self)
+        return copy.deepcopy(self)
 
     def __next__(self):
-        if self._pos >= len(self):
+        if self.it._it.curr >= len(self):
             raise StopIteration()
-
-        tmp = self._src[self._pos]
-        self._pos += 1
+        tmp = self.it.curr
+        next(self.it)
         return tmp
 
 
@@ -45,6 +46,7 @@ class RawIterator:
             self._it = it._it
         else:
             self._it = Iterable(it)
+            self.__step()
 
     @property
     def prev(self):
@@ -79,12 +81,12 @@ class RawIterator:
         return self._it.length
 
     def __iter__(self):
-        return self
+        return Span(self)
 
     def __next__(self):
-        self.__step()
         if self._it.curr >= len(self):
             raise StopIteration()
+        self.__step()
         return self.curr
 
     def __step(self):

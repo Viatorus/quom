@@ -15,10 +15,7 @@ from .whitespace_tokenizer import scan_for_whitespace
 def tokenize(src) -> List[Token]:
     it = CodeIterator(src)
 
-    tokens = [Token(None, TokenType.START)]
-
-    if it.lookahead:
-        next(it)
+    tokens = [Token(None, None, TokenType.START)]
 
     while it.curr:
         succeeded = scan_for_whitespace(tokens, it)
@@ -37,6 +34,6 @@ def tokenize(src) -> List[Token]:
         if not succeeded:
             raise TokenizeError('Unknown syntax.', it)
 
-    tokens.append(Token(None, TokenType.END))
+    tokens.append(Token(None, None, TokenType.END))
 
     return tokens

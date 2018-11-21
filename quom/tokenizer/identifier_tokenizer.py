@@ -11,13 +11,9 @@ class IdentifierType(Enum):
 
 
 class IdentifierToken(Token):
-    def __init__(self, it, identifier_type: IdentifierType):
-        super().__init__(it, TokenType.IDENTIFIER)
+    def __init__(self, start, end, identifier_type: IdentifierType):
+        super().__init__(start, end, TokenType.IDENTIFIER)
         self.identifier_type = identifier_type
-
-    @property
-    def identifier_name(self) -> str:
-        return ''.join(self.it)
 
 
 def scan_for_name(it: CodeIterator):
@@ -34,6 +30,6 @@ def scan_for_identifier(tokens: List[Token], it: CodeIterator):
     start = it.copy()
     identifier = scan_for_name(it)
     if identifier:
-        tokens.append(IdentifierToken(Span(start, it), IdentifierType.IDENTIFIER))
+        tokens.append(IdentifierToken(start, it, IdentifierType.IDENTIFIER))
         return True
     return False

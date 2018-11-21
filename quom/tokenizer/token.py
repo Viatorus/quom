@@ -1,7 +1,6 @@
 from enum import Enum
 
-
-# from quom.tokenizer.iterator import
+from .iterator import Span
 
 
 class TokenType(Enum):
@@ -17,6 +16,9 @@ class TokenType(Enum):
 
 
 class Token:
-    def __init__(self, start, token_type: TokenType):
-        self.it = start
+    def __init__(self, start, end, token_type: TokenType):
+        self.span = Span(start, end) if start and end else None
         self.token_type: TokenType = token_type
+
+    def __str__(self):
+        return ''.join(self.span)

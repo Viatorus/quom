@@ -15,9 +15,11 @@ def check_tokens(tokens: List[Token], res):
 def test_comments_cpp_style():
     tokens = tokenize('//abc')
     check_tokens(tokens, [TokenType.COMMENT])
+    assert str(tokens[1]) == '//abc'
 
     tokens = tokenize(' //abc\n')
     check_tokens(tokens, [TokenType.WHITESPACE, TokenType.COMMENT, TokenType.WHITESPACE])
+    assert str(tokens[2]) == '//abc'
 
     tokens = tokenize('//abc \\\n \\b')
     check_tokens(tokens, [TokenType.COMMENT])
@@ -26,9 +28,11 @@ def test_comments_cpp_style():
 def test_comments_c_style():
     tokens = tokenize('/*ab*/')
     check_tokens(tokens, [TokenType.COMMENT])
+    assert str(tokens[1]) == '/*ab*/'
 
     tokens = tokenize(' /*ab*/ ')
     check_tokens(tokens, [TokenType.WHITESPACE, TokenType.COMMENT, TokenType.WHITESPACE])
+    assert str(tokens[2]) == '/*ab*/'
 
     tokens = tokenize('/*ab\n*/')
     check_tokens(tokens, [TokenType.COMMENT])
@@ -78,23 +82,25 @@ def test_whitespace():
 def test_identifier():
     tokens = tokenize('abc')
     check_tokens(tokens, [TokenType.IDENTIFIER])
-    assert tokens[1].identifier_name == 'abc'
+    assert str(tokens[1]) == 'abc'
 
     tokens = tokenize(' abc ')
     check_tokens(tokens, [TokenType.WHITESPACE, TokenType.IDENTIFIER, TokenType.WHITESPACE])
-    assert tokens[2].identifier_name == 'abc'
+    assert str(tokens[2]) == 'abc'
 
     tokens = tokenize('_ab_c')
     check_tokens(tokens, [TokenType.IDENTIFIER])
-    assert tokens[1].identifier_name == '_ab_c'
+    assert str(tokens[1]) == '_ab_c'
 
 
 def test_quote_single():
     tokens = tokenize('\'abc\'')
     check_tokens(tokens, [TokenType.QUOTE])
+    assert str(tokens[1]) == '\'abc\''
 
     tokens = tokenize(' \'abc\' ')
     check_tokens(tokens, [TokenType.WHITESPACE, TokenType.QUOTE, TokenType.WHITESPACE])
+    assert str(tokens[2]) == '\'abc\''
 
     tokens = tokenize('\'a\\bc\'')
     check_tokens(tokens, [TokenType.QUOTE])
@@ -112,12 +118,15 @@ def test_quote_single():
 def test_quote_double():
     tokens = tokenize('"abc"')
     check_tokens(tokens, [TokenType.QUOTE])
+    assert str(tokens[1]) == '"abc"'
 
     tokens = tokenize(' "abc" ')
     check_tokens(tokens, [TokenType.WHITESPACE, TokenType.QUOTE, TokenType.WHITESPACE])
+    assert str(tokens[2]) == '"abc"'
 
     tokens = tokenize('"abc\\""')
     check_tokens(tokens, [TokenType.QUOTE])
+    assert str(tokens[1]) == '"abc\\""'
 
     #tokens = tokenize('R"=1(abc)=1"')
     #check_tokens(tokens, [TokenType.IDENTIFIER, TokenType.QUOTE])

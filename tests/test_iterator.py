@@ -7,17 +7,14 @@ from quom.tokenizer.iterator import RawIterator, EscapeIterator, CodeIterator, S
 def check_iterator(it, res):
     crr = None
 
-    assert it.prev is None
-    assert it.curr is None
-
     for c in res:
-        next(it)
-
         prv = crr
         crr = c
 
         assert it.prev == prv
         assert it.curr == crr
+
+        next(it)
 
     with pytest.raises(StopIteration):
         next(it)
@@ -64,13 +61,13 @@ def test_raw_iterator():
     check_iterator(it, '\n')
 
     it = RawIterator('a')
-    assert it.lookahead == 'a'
+    assert it.lookahead is None
 
     it = RawIterator('\\')
-    assert it.lookahead == '\\'
+    assert it.lookahead is None
 
     it = RawIterator('\\\na')
-    assert it.lookahead == '\\'
+    assert it.lookahead == '\n'
 
     it = RawIterator('')
     assert it.lookahead is None
@@ -117,13 +114,13 @@ def test_escape_iterator():
     check_iterator(it, '')
 
     it = EscapeIterator('a')
-    assert it.lookahead == 'a'
+    assert it.lookahead is None
 
     it = EscapeIterator('\\')
-    assert it.lookahead == '\\'
+    assert it.lookahead is None
 
     it = EscapeIterator('\\\na')
-    assert it.lookahead == 'a'
+    assert it.lookahead is None
 
     it = EscapeIterator('')
     assert it.lookahead is None
@@ -159,26 +156,23 @@ def test_code_iterator():
     with pytest.raises(TokenizeError):
         check_iterator(it, '"\\a')
 
-    it = CodeIterator('\\\\')
     with pytest.raises(TokenizeError):
-        check_iterator(it, ' ')
+         CodeIterator('\\\\')
 
-    it = CodeIterator('\\')
     with pytest.raises(TokenizeError):
-        check_iterator(it, ' ')
+        CodeIterator('\\')
 
     it = CodeIterator('\\\n')
     check_iterator(it, '')
 
     it = CodeIterator('a')
-    assert it.lookahead == 'a'
+    assert it.lookahead is None
 
     it = CodeIterator('\\\na')
-    assert it.lookahead == 'a'
+    assert it.lookahead is None
 
-    it = CodeIterator('\\a')
     with pytest.raises(TokenizeError):
-        assert it.lookahead == 'a'
+        CodeIterator('\\a')
 
     it = CodeIterator('')
     assert it.lookahead is None
@@ -186,7 +180,6 @@ def test_code_iterator():
 
 def test_copy():
     it1 = CodeIterator('ab')
-    next(it1)
     assert it1.curr == 'a'
 
     it2 = it1.copy()
@@ -201,7 +194,6 @@ def test_copy():
 
 def test_iterator_casting():
     it = CodeIterator('a\\\r\\b\\\nc')
-    next(it)
     assert it.curr == 'a'
 
     it = EscapeIterator(it)
@@ -221,10 +213,10 @@ def test_iterator_casting():
 
 def test_span():
     it1 = CodeIterator('abc')
-    next(it1)
+    assert ''.join(it1) == 'abc'
+    assert ''.join(it1) == 'abc'
+
     it2 = it1.copy()
     next(it2)
-
-    span = Span(it1, it2)
-    assert ''.join(span) == 'ab'
-    assert ''.join(span) == 'ab'
+    assert ''.join(it2) == 'bc'
+    assert ''.join(it2) == 'bc'
