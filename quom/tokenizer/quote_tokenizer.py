@@ -32,8 +32,7 @@ class QuoteToken(Token):
         self.literal_encoding = literal_encoding
 
 
-def to_literal_encoding(identifier: IdentifierToken):
-    name = identifier.identifier_name
+def to_literal_encoding(name: str):
     if name == 'u8':
         return LiteralEncoding.UTF8
     elif name == 'u':
@@ -52,7 +51,7 @@ def to_literal_encoding(identifier: IdentifierToken):
         return LiteralEncoding.RAW_UTF32
     elif name == 'LR':
         return LiteralEncoding.RAW_WIDE
-    raise TokenizeError('Unknown literal encoding.', identifier.it)
+    raise TokenizeError('Unknown literal encoding: ' + name)
 
 
 def scan_for_quote_single(tokens: List[Token], it: CodeIterator):
@@ -86,8 +85,7 @@ def scan_for_quote_double(tokens: List[Token], it: CodeIterator):
 
     literal_encoding = LiteralEncoding.NONE
     if tokens[-1].token_type == TokenType.IDENTIFIER:
-        # literal_encoding = to_literal_encoding(tokens[-1])
-        pass
+        literal_encoding = to_literal_encoding(str(tokens[-1]))
 
     if literal_encoding in [LiteralEncoding.NONE, LiteralEncoding.WIDE, LiteralEncoding.UTF8, LiteralEncoding.UTF16,
                             LiteralEncoding.UTF32]:

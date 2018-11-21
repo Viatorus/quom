@@ -220,3 +220,11 @@ def test_span():
     next(it2)
     assert ''.join(it2) == 'bc'
     assert ''.join(it2) == 'bc'
+
+    it1 = CodeIterator('a ')
+    it2 = it1.copy()
+    next(it2)
+
+    span = Span(it1, it2)
+    assert ''.join(span) == 'a'
+    assert ''.join(span) == 'a'

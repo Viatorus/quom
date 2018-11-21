@@ -12,7 +12,7 @@ class Span:
     def __init__(self, start: 'RawIterator', end: 'RawIterator' = None):
         self.it = start.copy()
         if end and end._it.curr < len(self.it):
-            self._length = end._it.curr - start._it.curr + 1
+            self._length = end._it.curr
         else:
             self._length = len(self.it)
 
