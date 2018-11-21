@@ -2,7 +2,7 @@ from enum import Enum
 from typing import List
 
 from .token import Token, TokenType
-from .iterator import CodeIterator
+from .iterator import CodeIterator, Span
 
 
 class IdentifierType(Enum):
@@ -11,13 +11,13 @@ class IdentifierType(Enum):
 
 
 class IdentifierToken(Token):
-    def __init__(self, start, end, identifier_type: IdentifierType):
-        super().__init__(start, end, TokenType.IDENTIFIER)
+    def __init__(self, it, identifier_type: IdentifierType):
+        super().__init__(it, TokenType.IDENTIFIER)
         self.identifier_type = identifier_type
 
     @property
     def identifier_name(self) -> str:
-        return ''.join(self.start[:(self.end.pos - self.start.pos)])
+        return ''.join(self.it)
 
 
 def scan_for_name(it: CodeIterator):
@@ -25,15 +25,15 @@ def scan_for_name(it: CodeIterator):
         return None
     start = it.copy()
 
-    while next(it, None) and (it.curr.isalnum() or it.curr == '_'):
+    while next(it, None) and it.curr and (it.curr.isalnum() or it.curr == '_'):
         pass
-    return start
+    return Span(start, it)
 
 
 def scan_for_identifier(tokens: List[Token], it: CodeIterator):
     start = it.copy()
     identifier = scan_for_name(it)
     if identifier:
-        tokens.append(IdentifierToken(start, it, IdentifierType.IDENTIFIER))
+        tokens.append(IdentifierToken(Span(start, it), IdentifierType.IDENTIFIER))
         return True
     return False

@@ -2,9 +2,9 @@ from enum import Enum
 from typing import List
 
 from .identifier_tokenizer import IdentifierToken
+from .iterator import CodeIterator, EscapeIterator, Span
 from .token import Token, TokenType
 from .tokenize_error import TokenizeError
-from quom.tokenizer.iterator import CodeIterator, EscapeIterator
 
 
 class LiteralEncoding(Enum):
@@ -26,8 +26,8 @@ class QuoteType(Enum):
 
 
 class QuoteToken(Token):
-    def __init__(self, start, end, quote_type: QuoteType, literal_encoding: LiteralEncoding = None):
-        super().__init__(start, end, TokenType.QUOTE)
+    def __init__(self, start, quote_type: QuoteType, literal_encoding: LiteralEncoding = None):
+        super().__init__(start, TokenType.QUOTE)
         self.quote_type = quote_type
         self.literal_encoding = literal_encoding
 
@@ -52,7 +52,7 @@ def to_literal_encoding(identifier: IdentifierToken):
         return LiteralEncoding.RAW_UTF32
     elif name == 'LR':
         return LiteralEncoding.RAW_WIDE
-    raise TokenizeError('Unknown literal encoding.', identifier.start)
+    raise TokenizeError('Unknown literal encoding.', identifier.it)
 
 
 def scan_for_quote_single(tokens: List[Token], it: CodeIterator):
@@ -93,7 +93,7 @@ def scan_for_quote_double(tokens: List[Token], it: CodeIterator):
                             LiteralEncoding.UTF32]:
         # Parse until end of line or non escaped ".
         backslashes = 0
-        while  next(it, None) and (it.curr != '"' or backslashes % 2 != 0):
+        while next(it, None) and (it.curr != '"' or backslashes % 2 != 0):
             if it.curr == '\\':
                 backslashes += 1
             else:
@@ -130,7 +130,7 @@ def scan_for_quote_double(tokens: List[Token], it: CodeIterator):
         if it == it_end:
             raise TokenizeError('No terminating delimiter inside raw string literal found!', it)
 
-    tokens.append(QuoteToken(start, it, QuoteType.Double, literal_encoding))
+    tokens.append(QuoteToken(Span(start, it), QuoteType.Double, literal_encoding))
     return True
 
 

@@ -8,6 +8,27 @@ class Iterator:
     pass
 
 
+class Span:
+    def __init__(self, start: 'RawIterator', end: 'RawIterator'):
+        self._src = start._it.src
+        self._pos = start._it.curr
+        self._length = min(end._it.curr - start._it.curr + 1, len(self._src))
+
+    def __len__(self):
+        return self._length
+
+    def __iter__(self):
+        return copy.copy(self)
+
+    def __next__(self):
+        if self._pos >= len(self):
+            raise StopIteration()
+
+        tmp = self._src[self._pos]
+        self._pos += 1
+        return tmp
+
+
 class Iterable:
     def __init__(self, src):
         self.src = src
@@ -17,7 +38,7 @@ class Iterable:
 
 
 class RawIterator:
-    def __init__(self, it: Union[Iterable, str]):
+    def __init__(self, it: Union[Iterable, 'RawIterator', str]):
         if isinstance(it, Iterable):
             self._it = it
         elif isinstance(it, RawIterator):
@@ -54,9 +75,6 @@ class RawIterator:
         tmp = copy.deepcopy(self)
         return tmp
 
-    def has_next(self):
-        return self.lookahead is not None
-
     def __len__(self):
         return self._it.length
 
@@ -72,8 +90,8 @@ class RawIterator:
     def __step(self):
         self._it.prev = self._it.curr
 
-        if self._it.curr + 1 >= len(self._it.src):
-            self._it.curr = len(self._it.src)
+        if self._it.curr + 1 >= len(self):
+            self._it.curr = len(self)
             return
 
         self._it.prev = self._it.curr

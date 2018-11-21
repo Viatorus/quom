@@ -78,12 +78,15 @@ def test_whitespace():
 def test_identifier():
     tokens = tokenize('abc')
     check_tokens(tokens, [TokenType.IDENTIFIER])
+    assert tokens[1].identifier_name == 'abc'
 
     tokens = tokenize(' abc ')
     check_tokens(tokens, [TokenType.WHITESPACE, TokenType.IDENTIFIER, TokenType.WHITESPACE])
+    assert tokens[2].identifier_name == 'abc'
 
-    tokens = tokenize('_abc')
+    tokens = tokenize('_ab_c')
     check_tokens(tokens, [TokenType.IDENTIFIER])
+    assert tokens[1].identifier_name == '_ab_c'
 
 
 def test_quote_single():

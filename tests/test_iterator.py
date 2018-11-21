@@ -1,7 +1,7 @@
 import pytest
 
 from quom.tokenizer import TokenizeError
-from quom.tokenizer.iterator import RawIterator, EscapeIterator, CodeIterator
+from quom.tokenizer.iterator import RawIterator, EscapeIterator, CodeIterator, Span
 
 
 def check_iterator(it, res):
@@ -18,8 +18,6 @@ def check_iterator(it, res):
 
         assert it.prev == prv
         assert it.curr == crr
-
-    # assert it.has_next:
 
     with pytest.raises(StopIteration):
         next(it)
@@ -219,3 +217,14 @@ def test_iterator_casting():
     assert it.curr == '\n'
     next(it)
     assert it.curr == 'c'
+
+
+def test_span():
+    it1 = CodeIterator('abc')
+    next(it1)
+    it2 = it1.copy()
+    next(it2)
+
+    span = Span(it1, it2)
+    assert ''.join(span) == 'ab'
+    assert ''.join(span) == 'ab'

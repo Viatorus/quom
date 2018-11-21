@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import List
 
-from .iterator import CodeIterator, EscapeIterator
+from .iterator import CodeIterator, EscapeIterator, Span
 from .token import Token, TokenType
 from .tokenize_error import TokenizeError
 
@@ -12,8 +12,8 @@ class CommentType(Enum):
 
 
 class CommentToken(Token):
-    def __init__(self, start, end, comment_type: CommentType):
-        super().__init__(start, end, TokenType.COMMENT)
+    def __init__(self, it, comment_type: CommentType):
+        super().__init__(it, TokenType.COMMENT)
         self.comment_type = comment_type
 
 
@@ -29,7 +29,7 @@ def scan_for_comment_cpp_style(tokens: List[Token], it: CodeIterator):
     while next(it, None) and it.curr != '\n':
         pass
 
-    tokens.append(CommentToken(start, it, CommentType.CPP_STYLE))
+    tokens.append(CommentToken(Span(start, it), CommentType.CPP_STYLE))
     return True
 
 
@@ -50,7 +50,7 @@ def scan_for_comment_c_style(tokens: List[Token], it: CodeIterator):
     next(it)
     next(it, None)
 
-    tokens.append(CommentToken(start, it, CommentType.C_STYLE))
+    tokens.append(CommentToken(Span(start, it), CommentType.C_STYLE))
     return True
 
 

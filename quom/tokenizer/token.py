@@ -17,7 +17,6 @@ class TokenType(Enum):
 
 
 class Token:
-    def __init__(self, start, end, token_type: TokenType):
-        self.start = start.copy() if start is not None else None
-        self.end = end.copy() if end is not None else None
+    def __init__(self, start, token_type: TokenType):
+        self.it = start
         self.token_type: TokenType = token_type
