@@ -1,7 +1,7 @@
 import pytest
 
 from quom.tokenizer import TokenizeError
-from quom.tokenizer.iterator import Iterator
+from quom.tokenizer.iterator import RawIterator, EscapeIterator, CodeIterator
 
 
 def check_iterator(it, res):
@@ -23,177 +23,150 @@ def check_iterator(it, res):
         next(it)
 
 
-def test_linefeed():
-    it = Iterator("a\nb")
-    check_iterator(it, "a\nb")
-
-
-def test_carriage_return():
-    it = Iterator("a\rb")
-    check_iterator(it, "a\nb")
-
-
-def test_carriage_return_line_feed():
-    it = Iterator("a\r\nb")
-    check_iterator(it, "a\nb")
-
-
-def test_line_wrap():
-    it = Iterator("a\\\nb")
-    check_iterator(it, "ab")
-
-    it = Iterator("a\\\rb")
-    check_iterator(it, "ab")
-
-    it = Iterator("a\\\r\nb")
-    check_iterator(it, "ab")
-
-    it = Iterator("a\\\n\\\nb")
-    check_iterator(it, "ab")
-
-    it = Iterator("a\\\r\\\nb")
-    check_iterator(it, "ab")
-
-    it = Iterator("a\\\r\\\r\nb")
-    check_iterator(it, "ab")
-
-    it = Iterator("a\\\\\\\nb")
-    check_iterator(it, "a\\b")
-
-    it = Iterator("a\\\\\\\rb")
-    check_iterator(it, "a\\b")
-
-    it = Iterator("a\\\\\\\r\n\nb")
-    check_iterator(it, "a\\\nb")
-
-    it = Iterator("a\\\\\\\r\n\rb")
-    check_iterator(it, "a\\\nb")
-
-    it = Iterator("a\\\\\\\r\n\r\nb")
-    check_iterator(it, "a\\\nb")
-
-    it = Iterator("a\\\\b")
-    check_iterator(it, "a\\b")
-
-    # Stray at file end
-    it = Iterator("a\\\\\\")
-    with pytest.raises(TokenizeError):
-        check_iterator(it, "a\\")
-
-
-def test_stray_sequence():
-    it = Iterator("ab\\e")
-    next(it)
-    next(it)
-    with pytest.raises(TokenizeError):
-        next(it)
-
-    it = Iterator("ab\\e")
-    next(it)
-    next(it)
-    it._step(escape_characters=True)
-    assert it.prev == 'b'
-    assert it.curr == '\\'
-
-    next(it)
-
-    assert it.prev == '\\'
-    assert it.curr == 'e'
-
-    it = Iterator('\\')
-    with pytest.raises(TokenizeError):
-        next(it)
-
-
-def test_escape():
-    it = Iterator("\"\\a")
-    next(it)
-    with pytest.raises(TokenizeError):
-        next(it)
-
-    it = Iterator('"\\a')
-    next(it)
-    it._step(escape_characters=True)
-
-    assert it.prev == '"'
-    assert it.curr == '\\'
-
-    next(it)
-
-    assert it.prev == '\\'
-    assert it.curr == 'a'
-
-    it = Iterator("//\\\nd")
-    next(it)
-    next(it)
-
-    assert it.prev == '/'
-    assert it.curr == '/'
-
-    it._step(escape_characters=True)
-
-    assert it.prev == '/'
-    assert it.curr == 'd'
-
-    it = Iterator("//\\\n\\d")
-    next(it)
-    next(it)
-
-    assert it.prev == '/'
-    assert it.curr == '/'
-
-    it._step(escape_characters=True)
-
-    assert it.prev == '/'
-    assert it.curr == '\\'
-
-    next(it)
-
-    assert it.prev == '\\'
-    assert it.curr == 'd'
-
-
-def test_ingore_line_wrapping():
-    it = Iterator('a\\\nb')
+def test_raw_iterator():
+    it = RawIterator('ab')
     check_iterator(it, 'ab')
 
-    it = Iterator('a\\\nb')
-    next(it)
-    it._step(ignore_line_wrapping=True, escape_characters=True)
+    it = RawIterator('a\rb')
+    check_iterator(it, 'a\nb')
 
-    assert it.prev == 'a'
-    assert it.curr == '\\'
+    it = RawIterator('a\r\nb')
+    check_iterator(it, 'a\nb')
 
-    next(it)
+    it = RawIterator('a\\\r\nb')
+    check_iterator(it, 'a\\\nb')
 
-    assert it.prev == '\\'
-    assert it.curr == '\n'
+    it = RawIterator('a\\\nb')
+    check_iterator(it, 'a\\\nb')
 
-    next(it)
+    it = RawIterator('a\\\rb')
+    check_iterator(it, 'a\\\nb')
 
-    assert it.prev == '\n'
-    assert it.curr == 'b'
+    it = RawIterator("a\\\r\\\r\nb")
+    check_iterator(it, "a\\\n\\\nb")
+
+    it = RawIterator('a\\b')
+    check_iterator(it, 'a\\b')
+
+    it = RawIterator('"\\a')
+    check_iterator(it, '"\\a')
+
+    it = RawIterator('\\\\')
+    check_iterator(it, '\\\\')
+
+    it = RawIterator('\\')
+    check_iterator(it, '\\')
+
+    it = RawIterator('\\\n')
+    check_iterator(it, '\\\n')
+
+    it = RawIterator('a')
+    assert it.lookahead == 'a'
+
+    it = RawIterator('\\')
+    assert it.lookahead == '\\'
+
+    it = RawIterator('\\\na')
+    assert it.lookahead == '\\'
 
 
-def test_ingore_line_wrapping_and_escape():
-    it = Iterator('a\\\n\\b')
-    next(it)
-    it._step(ignore_line_wrapping=True, escape_characters=True)
+def test_escape_iterator():
+    it = EscapeIterator('ab')
+    check_iterator(it, 'ab')
 
-    assert it.prev == 'a'
-    assert it.curr == '\\'
+    it = EscapeIterator('a\rb')
+    check_iterator(it, 'a\nb')
 
-    next(it)
+    it = EscapeIterator('a\r\nb')
+    check_iterator(it, 'a\nb')
 
-    assert it.prev == '\\'
-    assert it.curr == '\n'
+    it = EscapeIterator('a\\\r\nb')
+    check_iterator(it, 'ab')
 
-    it._step(ignore_line_wrapping=True, escape_characters=True)
+    it = EscapeIterator('a\\\nb')
+    check_iterator(it, 'ab')
 
-    assert it.prev == '\n'
-    assert it.curr == '\\'
+    it = EscapeIterator('a\\\rb')
+    check_iterator(it, 'ab')
 
-    next(it)
+    it = EscapeIterator('a\\\\\nb')
+    check_iterator(it, 'a\\b')
 
-    assert it.prev == '\\'
-    assert it.curr == 'b'
+    it = EscapeIterator("a\\\r\\\r\nb")
+    check_iterator(it, "ab")
+
+    it = EscapeIterator('a\\b')
+    check_iterator(it, 'a\\b')
+
+    it = EscapeIterator('"\\a')
+    check_iterator(it, '"\\a')
+
+    it = EscapeIterator('\\\\')
+    check_iterator(it, '\\\\')
+
+    it = EscapeIterator('\\')
+    check_iterator(it, '\\')
+
+    it = EscapeIterator('\\\n')
+    check_iterator(it, '')
+
+    it = EscapeIterator('a')
+    assert it.lookahead == 'a'
+
+    it = EscapeIterator('\\')
+    assert it.lookahead == '\\'
+
+    it = EscapeIterator('\\\na')
+    assert it.lookahead == 'a'
+
+
+def test_source_iterator():
+    it = CodeIterator('ab')
+    check_iterator(it, 'ab')
+
+    it = CodeIterator('a\rb')
+    check_iterator(it, 'a\nb')
+
+    it = CodeIterator('a\r\nb')
+    check_iterator(it, 'a\nb')
+
+    it = CodeIterator('a\\\r\nb')
+    check_iterator(it, 'ab')
+
+    it = CodeIterator('a\\\nb')
+    check_iterator(it, 'ab')
+
+    it = CodeIterator('a\\\rb')
+    check_iterator(it, 'ab')
+
+    it = CodeIterator("a\\\r\\\r\nb")
+    check_iterator(it, "ab")
+
+    it = CodeIterator('a\\b')
+    with pytest.raises(TokenizeError):
+        check_iterator(it, 'a\\b')
+
+    it = CodeIterator('"\\a')
+    with pytest.raises(TokenizeError):
+        check_iterator(it, '"\\a')
+
+    it = CodeIterator('\\\\')
+    with pytest.raises(TokenizeError):
+        check_iterator(it, ' ')
+
+    it = CodeIterator('\\')
+    with pytest.raises(TokenizeError):
+        check_iterator(it, ' ')
+
+    it = CodeIterator('\\\n')
+    check_iterator(it, '')
+
+    it = CodeIterator('a')
+    assert it.lookahead == 'a'
+
+    it = CodeIterator('\\\na')
+    assert it.lookahead == 'a'
+
+    it = CodeIterator('\\a')
+    with pytest.raises(TokenizeError):
+        assert it.lookahead == 'a'

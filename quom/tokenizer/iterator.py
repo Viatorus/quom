@@ -1,18 +1,13 @@
 from .tokenize_error import TokenizeError
 
 
-class Iterator(object):
+class RawIterator:
     def __init__(self, src):
         self._src = src
         self._length = len(src)
 
         self._prev = -1
         self._curr = -1
-
-        # if self._length == 0 or self._src[-1] != '\n':
-        #     self._src += '\n'
-        if self._length == 0:
-            return
 
     @property
     def prev(self):
@@ -30,7 +25,7 @@ class Iterator(object):
 
     @property
     def lookahead(self):
-        tmp = Iterator(self._src)
+        tmp = self.__class__(self._src)
         tmp._prev = self._prev
         tmp._curr = self._curr
         tmp._length = self._length
@@ -40,44 +35,83 @@ class Iterator(object):
         return self
 
     def __next__(self):
-        self._step()
+        self.__step()
         if self._curr >= self._length:
             raise StopIteration()
         return self.curr
 
-    def _step(self, escape_characters=False, ignore_line_wrapping=False):
+    def __step(self):
         self._prev = self._curr
 
         if self._curr + 1 >= len(self._src):
             self._curr = len(self._src)
             return
 
+        self._prev = self._curr
+
         src = self._src
         nxt = self._curr + 1
-        self._curr = self._length
 
+        self._curr = self._length
+        self._step(src, nxt)
+
+    def _step(self, src, nxt):
         # Get next character, but:
         # * skip \r followed by an \n
-        # * skip line wrapping (backslash followed by \r or \n) [ignore_line_wrapping = False]
-        # * escape characters followed by \ [escape_characters = True]
+        if src[nxt] == '\r':
+            if src[nxt + 1] == '\n':
+                nxt += 1
+        self._curr = nxt
+
+
+class EscapeIterator(RawIterator):
+    def _step(self, src, nxt):
+        # Get next character, but:
+        # * skip \r followed by an \n
+        # * do line wrapping (backslash followed by \r and/or \n)
         while nxt < self._length:
             if src[nxt] == '\r':
                 if src[nxt + 1] == '\n':
                     nxt += 1
                 break
             if src[nxt] == '\\':
-                # Escaped backslash.
-                if not escape_characters and nxt + 1 < self._length and src[nxt + 1] == '\\':
-                    nxt += 1
-                elif not ignore_line_wrapping and nxt + 1 < self._length and src[nxt + 1] == '\r':
+                if nxt + 1 >= self._length:
+                    break
+                if src[nxt + 1] == '\n':
+                    nxt += 2
+                    continue
+                elif src[nxt + 1] == '\r':
                     nxt += 2
                     if nxt < self._length and src[nxt] == '\n':
                         nxt += 1
                     continue
-                elif not ignore_line_wrapping and nxt + 1 < self._length and src[nxt + 1] == '\n':
+            break
+        self._curr = nxt
+
+
+class CodeIterator(RawIterator):
+    def _step(self, src, nxt):
+        # Get next character, but:
+        # * skip \r followed by an \n
+        # * do line wrapping (backslash followed by \r and/or \n)
+        # * no escape sequence allowed
+        while nxt < self._length:
+            if src[nxt] == '\r':
+                if src[nxt + 1] == '\n':
+                    nxt += 1
+                break
+            if src[nxt] == '\\':
+                if nxt + 1 >= self._length:
+                    raise TokenizeError('Stray \'\\\' in program.')
+                if src[nxt + 1] == '\n':
                     nxt += 2
                     continue
-                elif not escape_characters:
-                    raise TokenizeError('Stray \'\\\'  in program.')
+                elif src[nxt + 1] == '\r':
+                    nxt += 2
+                    if nxt < self._length and src[nxt] == '\n':
+                        nxt += 1
+                    continue
+                else:
+                    raise TokenizeError('Stray \'\\\' in program.')
             break
         self._curr = nxt
