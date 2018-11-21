@@ -4,6 +4,10 @@ from typing import Union
 from .tokenize_error import TokenizeError
 
 
+class Iterator:
+    pass
+
+
 class Iterable:
     def __init__(self, src):
         self.src = src
@@ -83,7 +87,7 @@ class RawIterator:
         # Get next character, but:
         # * skip \r followed by an \n
         if src[nxt] == '\r':
-            if src[nxt + 1] == '\n':
+            if nxt + 1 < len(self) and src[nxt + 1] == '\n':
                 nxt += 1
         return nxt
 
@@ -95,7 +99,7 @@ class EscapeIterator(RawIterator):
         # * do line wrapping (backslash followed by \r and/or \n)
         while nxt < len(self):
             if src[nxt] == '\r':
-                if src[nxt + 1] == '\n':
+                if nxt + 1 < len(self) and src[nxt + 1] == '\n':
                     nxt += 1
                 break
             if src[nxt] == '\\':
@@ -121,7 +125,7 @@ class CodeIterator(RawIterator):
         # * no escape sequence allowed
         while nxt < len(self):
             if src[nxt] == '\r':
-                if src[nxt + 1] == '\n':
+                if nxt + 1 < len(self) and src[nxt + 1] == '\n':
                     nxt += 1
                 break
             if src[nxt] == '\\':

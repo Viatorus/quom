@@ -2,7 +2,7 @@ from enum import Enum
 from typing import List
 
 from .token import Token, TokenType
-from quom.tokenizer.iterator import Iterator
+from .iterator import CodeIterator
 
 
 class IdentifierType(Enum):
@@ -20,20 +20,19 @@ class IdentifierToken(Token):
         return ''.join(self.start[:(self.end.pos - self.start.pos)])
 
 
-def scan_for_name(it: Iterator, it_end: Iterator):
-    if not it[0].isalpha() and it[0] != '_':
+def scan_for_name(it: CodeIterator):
+    if not it.curr.isalpha() and it.curr != '_':
         return None
     start = it.copy()
-    it += 1
 
-    while it[0].isalnum() or it[0] == '_':
-        it += 1
-    return start[:(it.pos - start.pos)]
+    while next(it, None) and (it.curr.isalnum() or it.curr == '_'):
+        pass
+    return start
 
 
-def scan_for_identifier(tokens: List[Token], it: Iterator, it_end: Iterator):
+def scan_for_identifier(tokens: List[Token], it: CodeIterator):
     start = it.copy()
-    identifier = scan_for_name(it, it_end)
+    identifier = scan_for_name(it)
     if identifier:
         tokens.append(IdentifierToken(start, it, IdentifierType.IDENTIFIER))
         return True

@@ -4,7 +4,7 @@ from typing import List
 from .identifier_tokenizer import IdentifierToken
 from .token import Token, TokenType
 from .tokenize_error import TokenizeError
-from quom.tokenizer.iterator import Iterator
+from quom.tokenizer.iterator import CodeIterator, EscapeIterator
 
 
 class LiteralEncoding(Enum):
@@ -55,55 +55,54 @@ def to_literal_encoding(identifier: IdentifierToken):
     raise TokenizeError('Unknown literal encoding.', identifier.start)
 
 
-def scan_for_quote_single(tokens: List[Token], it: Iterator, _: Iterator):
-    if it[0] != '\'':
+def scan_for_quote_single(tokens: List[Token], it: CodeIterator):
+    if it.curr != '\'':
         return False
+    it = EscapeIterator(it)
     start = it.copy()
-    it += 1
 
-    # Parse until end of line or non escaped '.
+    # Parse until non escaped '.
     backslashes = 0
-    while it[0] != '\n' and (it[0] != '\'' or backslashes % 2 != 0):
-        if it[0] == '\\':
+    while next(it, None) and (it.curr != '\'' or backslashes % 2 != 0):
+        if it.curr == '\\':
             backslashes += 1
         else:
             backslashes = 0
-        it += 1
 
-    # Check if end of line is reached.
-    if it[0] == '\n':
+    # Check if end of file is reached.
+    if it.curr is None:
         raise TokenizeError("Character sequence not terminated!", it)
-    it += 1
+    next(it, None)
 
     tokens.append(QuoteToken(start, it, QuoteType.SINGLE))
     return True
 
 
-def scan_for_quote_double(tokens: List[Token], it: Iterator, it_end: Iterator):
-    if it[0] != '"':
+def scan_for_quote_double(tokens: List[Token], it: CodeIterator):
+    if it.curr != '"':
         return None
+    it = EscapeIterator(it)
     start = it.copy()
-    it += 1
 
     literal_encoding = LiteralEncoding.NONE
     if tokens[-1].token_type == TokenType.IDENTIFIER:
-        literal_encoding = to_literal_encoding(tokens[-1])
+        # literal_encoding = to_literal_encoding(tokens[-1])
+        pass
 
     if literal_encoding in [LiteralEncoding.NONE, LiteralEncoding.WIDE, LiteralEncoding.UTF8, LiteralEncoding.UTF16,
                             LiteralEncoding.UTF32]:
         # Parse until end of line or non escaped ".
         backslashes = 0
-        while it[0] != '\n' and (it[0] != '"' or backslashes % 2 != 0):
-            if it[0] == '\\':
+        while  next(it, None) and (it.curr != '"' or backslashes % 2 != 0):
+            if it.curr == '\\':
                 backslashes += 1
             else:
                 backslashes = 0
-            it += 1
 
-        # Check if end of line is reached.
-        if it[0] == '\n':
+        # Check if end of file is reached.
+        if it.curr is None:
             raise TokenizeError("Character sequence not terminated!", it)
-        it += 1
+        next(it, None)
     else:
         delimiter = ""
 
@@ -135,7 +134,7 @@ def scan_for_quote_double(tokens: List[Token], it: Iterator, it_end: Iterator):
     return True
 
 
-def scan_for_quote(tokens: List[Token], it: Iterator, it_end: Iterator):
-    if not scan_for_quote_double(tokens, it, it_end):
-        return scan_for_quote_single(tokens, it, it_end)
+def scan_for_quote(tokens: List[Token], it: CodeIterator):
+    if not scan_for_quote_double(tokens, it):
+        return scan_for_quote_single(tokens, it)
     return True

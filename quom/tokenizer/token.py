@@ -1,6 +1,7 @@
 from enum import Enum
 
-from quom.tokenizer.iterator import Iterator
+
+# from quom.tokenizer.iterator import
 
 
 class TokenType(Enum):
@@ -16,7 +17,7 @@ class TokenType(Enum):
 
 
 class Token:
-    def __init__(self, start: Iterator, end: Iterator, token_type: TokenType):
-        self.start: Iterator = start.copy() if start is not None else None
-        self.end: Iterator = end.copy() if end is not None else None
+    def __init__(self, start, end, token_type: TokenType):
+        self.start = start.copy() if start is not None else None
+        self.end = end.copy() if end is not None else None
         self.token_type: TokenType = token_type

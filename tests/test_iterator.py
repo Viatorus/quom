@@ -62,6 +62,9 @@ def test_raw_iterator():
     it = RawIterator('\\\n')
     check_iterator(it, '\\\n')
 
+    it = RawIterator('\r')
+    check_iterator(it, '\n')
+
     it = RawIterator('a')
     assert it.lookahead == 'a'
 
