@@ -19,6 +19,8 @@ def check_iterator(it, res):
         assert it.prev == prv
         assert it.curr == crr
 
+    # assert it.has_next:
+
     with pytest.raises(StopIteration):
         next(it)
 
@@ -68,6 +70,9 @@ def test_raw_iterator():
 
     it = RawIterator('\\\na')
     assert it.lookahead == '\\'
+
+    it = RawIterator('')
+    assert it.lookahead is None
 
 
 def test_escape_iterator():
@@ -119,8 +124,11 @@ def test_escape_iterator():
     it = EscapeIterator('\\\na')
     assert it.lookahead == 'a'
 
+    it = EscapeIterator('')
+    assert it.lookahead is None
 
-def test_source_iterator():
+
+def test_code_iterator():
     it = CodeIterator('ab')
     check_iterator(it, 'ab')
 
@@ -170,3 +178,41 @@ def test_source_iterator():
     it = CodeIterator('\\a')
     with pytest.raises(TokenizeError):
         assert it.lookahead == 'a'
+
+    it = CodeIterator('')
+    assert it.lookahead is None
+
+
+def test_copy():
+    it1 = CodeIterator('ab')
+    next(it1)
+    assert it1.curr == 'a'
+
+    it2 = it1.copy()
+    next(it2)
+    assert it1.curr == 'a'
+    assert it2.curr == 'b'
+
+    next(it1)
+    assert it1.curr == 'b'
+    assert it2.curr == 'b'
+
+
+def test_iterator_casting():
+    it = CodeIterator('a\\\r\\b\\\nc')
+    next(it)
+    assert it.curr == 'a'
+
+    it = EscapeIterator(it)
+    next(it)
+    assert it.curr == '\\'
+    next(it)
+    assert it.curr == 'b'
+
+    it = RawIterator(it)
+    next(it)
+    assert it.curr == '\\'
+    next(it)
+    assert it.curr == '\n'
+    next(it)
+    assert it.curr == 'c'
