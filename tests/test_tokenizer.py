@@ -273,36 +273,43 @@ def test_number_octal():
     tokens = tokenize('01')
     check_tokens(tokens, [TokenType.NUMBER])
 
-# def test_preprocessor():
-#     tokens = tokenize("#")
-#
-#     tokens = tokenize("#pragma")
-#
-#     tokens = tokenize(" #pragma")
-#
-#     tokens = tokenize('#define')
-#
-#     tokens = tokenize('#include "abc" ')
-#
-#     tokens = tokenize('#include "abc\\"" ')
-#
-#     tokens = tokenize('#include <abc> ')
-#
-#     tokens = tokenize('#define a(x) auto a##x = #x')
-#
-#     tokens = tokenize('#define eprintf(format, ...) fprintf (stderr, format, __VA_ARGS__)')
-#
-#     tokens = tokenize('# /* abc */ define  /* test */')
 
-#
-#
-# def test_symbol():
-#     for symbol in "+-*/%<>&!=?.,[]{}():|":
-#         tokens = tokenize(symbol)
-#         
-#
-#     with pytest.raises(TokenizeError):
-#         tokens = tokenize('$')
-#         
-#
-#
+def test_preprocessor():
+    tokens = tokenize("#")
+    check_tokens(tokens, [TokenType.PREPROCESSOR])
+
+    tokens = tokenize("#pragma")
+    check_tokens(tokens, [TokenType.PREPROCESSOR])
+
+    tokens = tokenize(" #pragma")
+    check_tokens(tokens, [TokenType.WHITESPACE, TokenType.PREPROCESSOR])
+
+    tokens = tokenize('#define')
+    check_tokens(tokens, [TokenType.PREPROCESSOR])
+
+    tokens = tokenize('#include "abc" ')
+    check_tokens(tokens, [TokenType.PREPROCESSOR])
+
+    tokens = tokenize('#include "abc\\"" ')
+    check_tokens(tokens, [TokenType.PREPROCESSOR])
+
+    tokens = tokenize('#include <abc> ')
+    check_tokens(tokens, [TokenType.PREPROCESSOR])
+
+    tokens = tokenize('#define a(x) auto a##x = #x')
+    check_tokens(tokens, [TokenType.PREPROCESSOR])
+
+    tokens = tokenize('#define eprintf(format, ...) fprintf (stderr, format, __VA_ARGS__)')
+    check_tokens(tokens, [TokenType.PREPROCESSOR])
+
+    tokens = tokenize('# /* abc */ define  /* test */')
+    check_tokens(tokens, [TokenType.PREPROCESSOR])
+
+
+def test_symbol():
+    for symbol in "+-*/%<>&!=?.,[]{}():|":
+        tokens = tokenize(symbol)
+        check_tokens(tokens, [TokenType.SYMBOL])
+
+    with pytest.raises(TokenizeError):
+        tokenize('$')

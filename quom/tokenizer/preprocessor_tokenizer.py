@@ -5,7 +5,7 @@ from .comment_tokenizer import scan_for_comment
 from .identifier_tokenizer import scan_for_name, scan_for_identifier
 from .number_tokenizer import scan_for_number
 from .quote_tokenizer import scan_for_quote
-from .iterator import Iterator, CodeIterator
+from .iterator import Iterator, CodeIterator, EscapeIterator
 from .symbol_tokenizer import scan_for_symbol
 from .token import Token, TokenType
 from .tokenize_error import TokenizeError
@@ -13,7 +13,7 @@ from .whitespace_tokenizer import scan_for_whitespace, WhitespaceType
 
 
 class PreprocessorType(Enum):
-    UNDEFINED = 0,
+    UNKNOWN = 0,
     NULL_DIRECTIVE = 1,
     DEFINE = 2,
     UNDEFINE = 3,
@@ -38,7 +38,7 @@ class PreprocessorToken(Token):
 
 
 def scan_for_whitespaces_and_comments(tokens: List[Token], it: CodeIterator):
-    while True:
+    while it.curr:
         if scan_for_comment(tokens, it):
             continue
         if scan_for_whitespace(tokens, it):
@@ -46,65 +46,62 @@ def scan_for_whitespaces_and_comments(tokens: List[Token], it: CodeIterator):
                 return True
             continue
         break
-    return False
+    return it.curr is None
 
 
-def scan_for_preprocessor_symbol(tokens: List[Token], it: Iterator, it_end: Iterator):
-    if it[0] != '#':
+def scan_for_preprocessor_symbol(tokens: List[Token], it: CodeIterator):
+    if it.curr != '#':
         return
-    it += 1
+    next(it, None)
     return True
 
 
-def scan_for_line_end(tokens: List[Token], it: Iterator, it_end: Iterator):
-    while True:
-        if scan_for_whitespaces_and_comments(tokens, it, it_end):
+def scan_for_line_end(tokens: List[Token], it: CodeIterator):
+    while it.curr:
+        if scan_for_whitespaces_and_comments(tokens, it):
             return
-        succeeded = scan_for_identifier(tokens, it, it_end)
+        succeeded = scan_for_identifier(tokens, it)
         if not succeeded:
-            succeeded = scan_for_quote(tokens, it, it_end)
+            succeeded = scan_for_quote(tokens, it)
         if not succeeded:
-            succeeded = scan_for_number(tokens, it, it_end)
+            succeeded = scan_for_number(tokens, it)
         if not succeeded:
-            succeeded = scan_for_symbol(tokens, it, it_end)
+            succeeded = scan_for_symbol(tokens, it)
         if not succeeded:
-            succeeded = scan_for_preprocessor_symbol(tokens, it, it_end)
+            succeeded = scan_for_preprocessor_symbol(tokens, it)
         if not succeeded:
             raise TokenizeError('Unknown syntax.', it)
 
 
-def scan_for_preprocessor_include(tokens: List[Token], it: Iterator, it_end: Iterator):
-    if scan_for_whitespaces_and_comments(tokens, it, it_end) or it[0] != '"' and it[0] != '<':
+def scan_for_preprocessor_include(tokens: List[Token], it: CodeIterator):
+    if scan_for_whitespaces_and_comments(tokens, it) or it.curr != '"' and it.curr != '<':
         raise TokenizeError("Expected \"FILENAME\" or <FILENAME> after include!", it)
 
-    if it[0] == '"':
-        it += 1
+    it = EscapeIterator(it)
 
-        # Parse until end of line or non escaped ".
+    if it.curr == '"':
+        # Parse until non escaped ".
         backslashes = 0
-        while it[0] != '\n' and (it[0] != '"' or backslashes % 2 != 0):
-            if it[0] == '\\':
+        while next(it, None) and it.curr != '\n' and (it.curr != '"' or backslashes % 2 != 0):
+            if it.curr == '\\':
                 backslashes += 1
             else:
                 backslashes = 0
-            it += 1
 
         # Check if end of line is reached.
-        if it[0] == '\n':
+        if it.curr != '"':
             raise TokenizeError("Character sequence not terminated!", it)
-        it += 1
+        next(it, None)
 
-    elif it[0] == '<':
-        it += 1
-
+    elif it.curr == '<':
         # Scan until terminating >.
-        while it[0] != '\n' and (it[0] != '>'):
-            it += 1
+        while next(it, None) and it.curr != '\n' and it.curr != '>':
+            pass
 
         # Check if end of line is reached.
-        if it[0] == '\n':
+        if it.curr != '>':
             raise TokenizeError("Character sequence not terminated!", it)
-        it += 1
+        next(it, None)
 
 
 def scan_for_preprocessor(tokens: List[Token], it: CodeIterator):
@@ -123,14 +120,12 @@ def scan_for_preprocessor(tokens: List[Token], it: CodeIterator):
         raise TokenizeError('Illegal preprocessor instruction.', start + 1)
     name = ''.join(name)
 
-    if name in ['if', 'ifdef', 'ifndef', 'elsif', 'pragma', 'warning', 'error', 'line', 'define', 'undef',
-                'else', 'endif']:
-        scan_for_line_end(preprocessor_tokens, it)
-    elif name == 'include':
-        scan_for_preprocessor_include(preprocessor_tokens, it)
-        scan_for_line_end(preprocessor_tokens, it)
-    else:
-        raise TokenizeError('Unknown preprocessor directive: ' + name + '<-', it)
+    preprocessor_type = PreprocessorType.UNKNOWN
 
-    tokens.append(PreprocessorToken(start, it, PreprocessorType.UNDEFINE, preprocessor_tokens))
+    if name == 'include':
+        scan_for_preprocessor_include(preprocessor_tokens, it)
+        preprocessor_type = PreprocessorType.INCLUDE
+    scan_for_line_end(preprocessor_tokens, it)
+
+    tokens.append(PreprocessorToken(start, it, preprocessor_type, preprocessor_tokens))
     return True

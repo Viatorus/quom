@@ -2,7 +2,7 @@ from enum import Enum
 from typing import List
 
 from .token import Token, TokenType
-from quom.tokenizer.iterator import Iterator
+from quom.tokenizer.iterator import CodeIterator
 
 
 class SymbolType(Enum):
@@ -15,10 +15,10 @@ class SymbolToken(Token):
         self.comment_type = symbol_type
 
 
-def scan_for_symbol(tokens: List[Token], it: Iterator, it_end: Iterator):
-    if it[0] not in '+-*/.,:?%!=<>(){}[]&|':
+def scan_for_symbol(tokens: List[Token], it: CodeIterator):
+    if it.curr not in '+-*/.,:?%!=<>(){}[]&|':
         return False
     start = it.copy()
-    it += 1
+    next(it, None)
     tokens.append(SymbolToken(start, it, SymbolType.UNDEFINED))
     return True

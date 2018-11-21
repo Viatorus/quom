@@ -65,7 +65,7 @@ def scan_for_binary(it: CodeIterator):
 
 
 def scan_for_number(tokens: List[Token], it: CodeIterator):
-    if not it.curr.isdigit() and (it.curr != '.' or not it.lookahead.isdigit()):
+    if not it.curr.isdigit() and (it.curr != '.' or not it.lookahead or not it.lookahead.isdigit()):
         return False
     start = it.copy()
     next(it, None)
