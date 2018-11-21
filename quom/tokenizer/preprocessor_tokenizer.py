@@ -5,11 +5,11 @@ from .comment_tokenizer import scan_for_comment
 from .identifier_tokenizer import scan_for_name, scan_for_identifier
 from .number_tokenizer import scan_for_number
 from .quote_tokenizer import scan_for_quote
+from .iterator import Iterator, CodeIterator
 from .symbol_tokenizer import scan_for_symbol
 from .token import Token, TokenType
 from .tokenize_error import TokenizeError
 from .whitespace_tokenizer import scan_for_whitespace, WhitespaceType
-from quom.tokenizer.iterator import Iterator
 
 
 class PreprocessorType(Enum):
@@ -37,11 +37,11 @@ class PreprocessorToken(Token):
         self.preprocessor_tokens = tokens
 
 
-def scan_for_whitespaces_and_comments(tokens: List[Token], it: Iterator, it_end: Iterator):
+def scan_for_whitespaces_and_comments(tokens: List[Token], it: CodeIterator):
     while True:
-        if scan_for_comment(tokens, it, it_end):
+        if scan_for_comment(tokens, it):
             continue
-        if scan_for_whitespace(tokens, it, it_end):
+        if scan_for_whitespace(tokens, it):
             if tokens[-1].whitespace_type == WhitespaceType.LINE_BREAK:
                 return True
             continue
@@ -107,28 +107,28 @@ def scan_for_preprocessor_include(tokens: List[Token], it: Iterator, it_end: Ite
         it += 1
 
 
-def scan_for_preprocessor(tokens: List[Token], it: Iterator, it_end: Iterator):
-    if it[0] != '#':
+def scan_for_preprocessor(tokens: List[Token], it: CodeIterator):
+    if it.curr != '#':
         return None
     start = it.copy()
-    it += 1
+    next(it, None)
 
     preprocessor_tokens = []
-    if scan_for_whitespaces_and_comments(preprocessor_tokens, it, it_end):
+    if scan_for_whitespaces_and_comments(preprocessor_tokens, it):
         tokens.append(PreprocessorToken(start, it, PreprocessorType.NULL_DIRECTIVE, preprocessor_tokens))
         return True
 
-    name = scan_for_name(it, it_end)
+    name = scan_for_name(it)
     if not name:
         raise TokenizeError('Illegal preprocessor instruction.', start + 1)
     name = ''.join(name)
 
     if name in ['if', 'ifdef', 'ifndef', 'elsif', 'pragma', 'warning', 'error', 'line', 'define', 'undef',
                 'else', 'endif']:
-        scan_for_line_end(preprocessor_tokens, it, it_end)
+        scan_for_line_end(preprocessor_tokens, it)
     elif name == 'include':
-        scan_for_preprocessor_include(preprocessor_tokens, it, it_end)
-        scan_for_line_end(preprocessor_tokens, it, it_end)
+        scan_for_preprocessor_include(preprocessor_tokens, it)
+        scan_for_line_end(preprocessor_tokens, it)
     else:
         raise TokenizeError('Unknown preprocessor directive: ' + name + '<-', it)
 

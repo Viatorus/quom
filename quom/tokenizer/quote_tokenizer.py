@@ -105,13 +105,11 @@ def scan_for_quote_double(tokens: List[Token], it: CodeIterator):
         delimiter = ""
 
         # Parse until end of introductory delimiter.
-        while it != it_end and it[0] != '(':
-            delimiter += it[0]
-            it += 1
+        while next(it, None) and it.curr != '(':
+            delimiter += it.curr
 
-        if it == it_end:
+        if it.curr is None:
             raise TokenizeError('No introductory delimiter inside raw string literal found!', it)
-        it += 1
 
         # Define terminating delimiter.
         delimiter = ')' + delimiter + '"'
@@ -119,14 +117,14 @@ def scan_for_quote_double(tokens: List[Token], it: CodeIterator):
         # Parse until delimiter occours again.
         # TODO: Please optimize me.
         string = ""
-        while it != it_end:
-            string += it[0]
-            it += 1
+        while next(it, None):
+            string += it.curr
             if len(string) > len(delimiter) and string.endswith(delimiter):
                 break
 
-        if it == it_end:
+        if it.curr is None:
             raise TokenizeError('No terminating delimiter inside raw string literal found!', it)
+        next(it, None)
 
     tokens.append(QuoteToken(start, it, QuoteType.Double, literal_encoding))
     return True

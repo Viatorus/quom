@@ -2,8 +2,8 @@ from enum import Enum
 from typing import List
 
 from .token import Token, TokenType
+from .iterator import CodeIterator
 from .tokenize_error import TokenizeError
-from quom.tokenizer.iterator import Iterator
 
 
 class NumberType(Enum):
@@ -25,117 +25,113 @@ class NumberToken(Token):
         self.precision = precision
 
 
-def scan_for_digit(it: Iterator, it_end: Iterator):
-    if not it[0].isnumeric():
+def scan_for_digit(it: CodeIterator):
+    if not it.curr or not it.curr.isnumeric():
         return False
 
-    it += 1
-    while it[0].isnumeric() or it[0] == '\'':
-        it += 1
+    while next(it, None) and (it.curr.isnumeric() or it.curr == '\''):
+        pass
 
-    if it[-1] == '\'':
+    if it.prev == '\'':
         raise TokenizeError("Digit separator does not adjacent to digit!", it)
 
     return True
 
 
-def scan_for_hexadecimal(it: Iterator, it_end: Iterator):
-    if not it[0].isnumeric() and 'a' > it[0] > 'f' and 'A' > it[0] > 'F':
+def scan_for_hexadecimal(it: CodeIterator):
+    if not it.curr or not it.curr.isnumeric() and 'a' > it.curr > 'f' and 'A' > it.curr > 'F':
         return False
 
-    it += 1
-    while it[0].isnumeric() or 'a' <= it[0] <= 'f' or 'A' <= it[0] <= 'F' or it[0] == '\'':
-        it += 1
+    while next(it, None) and (it.curr.isnumeric() or 'a' <= it.curr <= 'f' or 'A' <= it.curr <= 'F' or it.curr == '\''):
+        pass
 
-    if it[-1] == '\'':
+    if it.prev == '\'':
         raise TokenizeError("Digit separator does not adjacent to digit!", it)
 
     return True
 
 
-def scan_for_binary(it: Iterator, it_end: Iterator):
-    if it[0] not in ['0', '1']:
+def scan_for_binary(it: CodeIterator):
+    if it.curr and it.curr not in '01':
         return False
-    it += 1
 
-    while it[0] in ['0', '1', '\'']:
-        it += 1
+    while next(it, None) and it.curr in ['0', '1', '\'']:
+        pass
 
-    if it[-1] == '\'':
+    if it.prev == '\'':
         raise TokenizeError("Digit separator does not adjacent to digit!", it)
 
     return True
 
 
-def scan_for_number(tokens: List[Token], it: Iterator, it_end: Iterator):
-    if not it[0].isdigit() and (it[0] != '.' or not it[1].isdigit()):
+def scan_for_number(tokens: List[Token], it: CodeIterator):
+    if not it.curr.isdigit() and (it.curr != '.' or not it.lookahead.isdigit()):
         return False
     start = it.copy()
-    it += 1
+    next(it, None)
 
     number_type = NumberType.DECIMAL
     precision = Precision.INTEGER
 
-    if it[-1] == '0' and it[0] in ['x', 'X']:
-        it += 1
+    if it.curr and it.prev == '0' and it.curr in 'xX' and it.lookahead and ('0' <= it.lookahead <= '9' or 'a' <= it.lookahead <= 'f' or 'A' <= it.lookahead <= 'F'):
+        next(it, None)
         number_type = NumberType.HEX
 
-        scan_for_hexadecimal(it, it_end)
+        scan_for_hexadecimal(it)
 
         # Check for radix separator.
-        if it[0] == '.':
-            it += 1
+        if it.curr and it.curr == '.':
+            next(it, None)
             precision = Precision.FLOATING_POINT
 
-            scan_for_hexadecimal(it, it_end)
+            scan_for_hexadecimal(it)
 
-            if it[0] not in ['p', 'P']:
+            if not it.curr or it.curr not in 'pP':
                 raise TokenizeError('Hexadecimal floating constants require an exponent!', it)
 
-        if it[0] in ['p', 'P']:
-            it += 1
+        if it.curr and it.curr in 'pP':
+            next(it, None)
             precision = Precision.FLOATING_POINT
 
             # Check for sign.
-            if it[0] in ['+', '-']:
-                it += 1
+            if it.curr and it.curr in ['+', '-']:
+                next(it, None)
 
-            scan_for_hexadecimal(it, it_end)
+            scan_for_hexadecimal(it)
 
-    elif it[-1] == '0' and it[0] in ['b', 'B']:
-        it += 1
+    elif it.curr and it.prev == '0' and it.curr in 'bB' and it.lookahead and '0' <= it.lookahead <= '1':
         number_type = NumberType.BINARY
-
-        scan_for_binary(it, it_end)
-    else:
+        next(it, None)
+        scan_for_binary(it)
+    elif it.curr:
         number_type = NumberType.DECIMAL
 
         maybe_ocal = False
-        if it[-1] == '0':
+        if it.prev == '0':
             maybe_ocal = True
 
-        if it[0] != '.':
-            scan_for_digit(it, it_end)
+        if it.curr != '.':
+            scan_for_digit(it)
 
         # Check for radix separator.
-        if it[0] == '.':
-            it += 1
+        if it.curr and it.curr == '.':
+            next(it, None)
             precision = Precision.FLOATING_POINT
-        elif maybe_ocal and it[0] not in ['e', 'E']:
+        elif maybe_ocal and (not it.curr or it.curr not in 'eE'):
             number_type = NumberType.OCTAL
 
-        scan_for_digit(it, it_end)
+        scan_for_digit(it)
 
         # Check for exponent.
-        if it[0] in ['e', 'E']:
-            it += 1
+        if it.curr and it.curr in 'eE':
+            next(it)
             precision = Precision.FLOATING_POINT
 
             # Check for sign.
-            if it[0] in ['+', '-']:
-                it += 1
+            if it.curr in '+-':
+                next(it, None)
 
-            scan_for_digit(it, it_end)
+            scan_for_digit(it)
 
     tokens.append(NumberToken(start, it, number_type, precision))
     return True
