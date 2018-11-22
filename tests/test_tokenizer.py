@@ -136,6 +136,10 @@ def test_quote_double():
     check_tokens(tokens, [TokenType.IDENTIFIER, TokenType.QUOTE])
     assert str(tokens[2]) == '"(abc)"'
 
+    tokens = tokenize('R"(a\b\\r\\abc)"')
+    check_tokens(tokens, [TokenType.IDENTIFIER, TokenType.QUOTE])
+    assert str(tokens[2]) == '"(a\b\\r\\abc)"'
+
     tokens = tokenize('R"1=#(abc)1=#abc)1=#"')
     check_tokens(tokens, [TokenType.IDENTIFIER, TokenType.QUOTE])
 
@@ -177,17 +181,27 @@ def test_quote_double():
 
 
 def test_number():
-    tokens = tokenize("0")
+    tokens = tokenize('0')
     check_tokens(tokens, [TokenType.NUMBER])
-    assert str(tokens[1]) == "0"
+    assert str(tokens[1]) == '0'
 
-    tokens = tokenize("123")
+    tokens = tokenize('123')
     check_tokens(tokens, [TokenType.NUMBER])
-    assert str(tokens[1]) == "123"
+    assert str(tokens[1]) == '123'
 
-    tokens = tokenize(" 1234567890 ")
+    tokens = tokenize('1\'23')
+    check_tokens(tokens, [TokenType.NUMBER])
+    assert str(tokens[1]) == '1\'23'
+
+    tokens = tokenize(' 1234567890 ')
     check_tokens(tokens, [TokenType.WHITESPACE, TokenType.NUMBER, TokenType.WHITESPACE])
     assert str(tokens[2]) == "1234567890"
+
+    tokens = tokenize("001.1")
+    check_tokens(tokens, [TokenType.NUMBER])
+
+    tokens = tokenize("001e1")
+    check_tokens(tokens, [TokenType.NUMBER])
 
     tokens = tokenize('0x')
     check_tokens(tokens, [TokenType.NUMBER, TokenType.IDENTIFIER])
@@ -199,6 +213,12 @@ def test_number():
     check_tokens(tokens, [TokenType.NUMBER, TokenType.IDENTIFIER])
 
     tokens = tokenize('0B')
+    check_tokens(tokens, [TokenType.NUMBER, TokenType.IDENTIFIER])
+
+    tokens = tokenize('1x')
+    check_tokens(tokens, [TokenType.NUMBER, TokenType.IDENTIFIER])
+
+    tokens = tokenize('1b')
     check_tokens(tokens, [TokenType.NUMBER, TokenType.IDENTIFIER])
 
 
@@ -242,10 +262,28 @@ def test_number_hexadecimal():
     tokens = tokenize('0xFp1')
     check_tokens(tokens, [TokenType.NUMBER])
 
+    tokens = tokenize('0x02\'3')
+    check_tokens(tokens, [TokenType.NUMBER])
+
     tokens = tokenize('0x023p+1')
     check_tokens(tokens, [TokenType.NUMBER])
 
-    tokens = tokenize('0x0.123p-a')
+    tokens = tokenize('0xABCDEFabcdef')
+    check_tokens(tokens, [TokenType.NUMBER])
+
+    tokens = tokenize('0x0.123p-1')
+    check_tokens(tokens, [TokenType.NUMBER])
+
+    tokens = tokenize('0x0.e2\'3p-1\'0')
+    check_tokens(tokens, [TokenType.NUMBER])
+
+    tokens = tokenize('0x0.p1')
+    check_tokens(tokens, [TokenType.NUMBER])
+
+    tokens = tokenize('0xa.Ap1')
+    check_tokens(tokens, [TokenType.NUMBER])
+
+    tokens = tokenize('0xA.ap1')
     check_tokens(tokens, [TokenType.NUMBER])
 
     with pytest.raises(TokenizeError):
@@ -253,6 +291,9 @@ def test_number_hexadecimal():
 
     with pytest.raises(TokenizeError):
         tokenize('0x0.123')
+
+    with pytest.raises(TokenizeError):
+        tokenize('0x0.123p-A')
 
 
 def test_number_binary():
@@ -272,6 +313,18 @@ def test_number_binary():
 def test_number_octal():
     tokens = tokenize('01')
     check_tokens(tokens, [TokenType.NUMBER])
+
+    tokens = tokenize('0\'1')
+    check_tokens(tokens, [TokenType.NUMBER])
+
+    tokens = tokenize('0012345\'67')
+    check_tokens(tokens, [TokenType.NUMBER])
+
+    tokens = tokenize('01x')
+    check_tokens(tokens, [TokenType.NUMBER, TokenType.IDENTIFIER])
+
+    with pytest.raises(TokenizeError):
+        tokenize('0012345\'68')
 
 
 def test_preprocessor():

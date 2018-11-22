@@ -1,7 +1,6 @@
 from enum import Enum
 from typing import List
 
-from .identifier_tokenizer import IdentifierToken
 from .iterator import CodeIterator, EscapeIterator
 from .token import Token, TokenType
 from .tokenize_error import TokenizeError
@@ -69,7 +68,7 @@ def scan_for_quote_single(tokens: List[Token], it: CodeIterator):
             backslashes = 0
 
     # Check if end of file is reached.
-    if not it.curr:
+    if it.curr != '\'':
         raise TokenizeError("Character sequence not terminated!", it)
     it.next()
 
@@ -98,7 +97,7 @@ def scan_for_quote_double(tokens: List[Token], it: CodeIterator):
                 backslashes = 0
 
         # Check if end of file is reached.
-        if not it.curr:
+        if it.curr != '"':
             raise TokenizeError("Character sequence not terminated!", it)
         it.next()
     else:
@@ -108,7 +107,7 @@ def scan_for_quote_double(tokens: List[Token], it: CodeIterator):
         while it.next() and it.curr != '(':
             delimiter += it.curr
 
-        if it.curr is None:
+        if it.curr != '(':
             raise TokenizeError('No introductory delimiter inside raw string literal found!', it)
 
         # Define terminating delimiter.
@@ -116,13 +115,13 @@ def scan_for_quote_double(tokens: List[Token], it: CodeIterator):
 
         # Parse until delimiter occours again.
         # TODO: Please optimize me.
-        string = ""
+        string = ''
         while it.next():
             string += it.curr
             if len(string) > len(delimiter) and string.endswith(delimiter):
                 break
 
-        if not it.curr:
+        if it.curr != '"':
             raise TokenizeError('No terminating delimiter inside raw string literal found!', it)
         it.next()
 

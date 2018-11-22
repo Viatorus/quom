@@ -17,7 +17,7 @@ def tokenize(src) -> List[Token]:
 
     tokens = [Token(None, None, TokenType.START)]
 
-    while it.curr:
+    while it.curr != '\0':
         succeeded = scan_for_whitespace(tokens, it)
         if not succeeded:
             succeeded = scan_for_comment(tokens, it)

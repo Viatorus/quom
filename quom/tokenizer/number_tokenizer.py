@@ -2,7 +2,7 @@ from enum import Enum
 from typing import List
 
 from .token import Token, TokenType
-from .iterator import CodeIterator
+from .iterator import CodeIterator, Span
 from .tokenize_error import TokenizeError
 
 
@@ -26,23 +26,24 @@ class NumberToken(Token):
 
 
 def scan_for_digit(it: CodeIterator):
-    if not it.curr or not it.curr.isnumeric():
-        return False
+    if not it.curr.isnumeric() and it.curr != '\'':
+        return False, False
 
+    found_decimal = False
     while it.next() and (it.curr.isnumeric() or it.curr == '\''):
-        pass
+        found_decimal |= it.curr in '89'
 
     if it.prev == '\'':
         raise TokenizeError("Digit separator does not adjacent to digit!", it)
 
-    return True
+    return True, found_decimal
 
 
 def scan_for_hexadecimal(it: CodeIterator):
-    if not it.curr or not it.curr.isnumeric() and 'a' > it.curr > 'f' and 'A' > it.curr > 'F':
+    if not it.curr.isnumeric() and it.curr not in 'abcdefABCDEF':
         return False
 
-    while it.next() and (it.curr.isnumeric() or 'a' <= it.curr <= 'f' or 'A' <= it.curr <= 'F' or it.curr == '\''):
+    while it.next() and (it.curr.isnumeric() or it.curr in 'abcdefABCDEF' or it.curr == '\''):
         pass
 
     if it.prev == '\'':
@@ -52,10 +53,7 @@ def scan_for_hexadecimal(it: CodeIterator):
 
 
 def scan_for_binary(it: CodeIterator):
-    if it.curr not in '01':
-        return False
-
-    while it.next() and it.curr in ['0', '1', '\'']:
+    while it.next() and it.curr in '01\'':
         pass
 
     if it.prev == '\'':
@@ -65,7 +63,7 @@ def scan_for_binary(it: CodeIterator):
 
 
 def scan_for_number(tokens: List[Token], it: CodeIterator):
-    if not it.curr.isdigit() and (it.curr != '.' or not it.lookahead or not it.lookahead.isdigit()):
+    if not it.curr.isdigit() and (it.curr != '.' or not it.lookahead.isdigit()):
         return False
     start = it.copy()
     it.next()
@@ -73,7 +71,7 @@ def scan_for_number(tokens: List[Token], it: CodeIterator):
     number_type = NumberType.DECIMAL
     precision = Precision.INTEGER
 
-    if it.prev == '0' and it.curr in 'xX' and it.lookahead and ('0' <= it.lookahead <= '9' or 'a' <= it.lookahead <= 'f' or 'A' <= it.lookahead <= 'F'):
+    if it.prev == '0' and it.curr in 'xX' and (it.lookahead.isnumeric() or it.lookahead in 'abcdefABCDEF'):
         it.next()
         number_type = NumberType.HEX
 
@@ -94,12 +92,13 @@ def scan_for_number(tokens: List[Token], it: CodeIterator):
             precision = Precision.FLOATING_POINT
 
             # Check for sign.
-            if it.curr in ['+', '-']:
+            if it.curr in '+-':
                 it.next()
 
-            scan_for_hexadecimal(it)
+            if not scan_for_digit(it)[0]:
+                raise TokenizeError('Exponent has no digits.')
 
-    elif it.prev == '0' and it.curr in 'bB' and it.lookahead and '0' <= it.lookahead <= '1':
+    elif it.prev == '0' and it.curr in 'bB' and it.lookahead in '01':
         number_type = NumberType.BINARY
         it.next()
         scan_for_binary(it)
@@ -107,31 +106,36 @@ def scan_for_number(tokens: List[Token], it: CodeIterator):
         number_type = NumberType.DECIMAL
 
         maybe_ocal = False
-        if it.prev == '0':
+        if it.prev == '0' and it.curr in '01234567\'':
             maybe_ocal = True
 
+        found_decimal = False
         if it.curr != '.':
-            scan_for_digit(it)
+            _, found_decimal = scan_for_digit(it)
 
         # Check for radix separator.
         if it.curr == '.':
             it.next()
             precision = Precision.FLOATING_POINT
-        elif maybe_ocal and (not it.curr or it.curr not in 'eE'):
+        elif maybe_ocal and it.curr not in 'eE':
             number_type = NumberType.OCTAL
 
-        scan_for_digit(it)
-
-        # Check for exponent.
-        if it.curr in 'eE':
-            it.next()
-            precision = Precision.FLOATING_POINT
-
-            # Check for sign.
-            if it.curr in '+-':
-                it.next()
-
+        if number_type != NumberType.OCTAL:
             scan_for_digit(it)
+
+            # Check for exponent.
+            if it.curr in 'eE':
+                it.next()
+                precision = Precision.FLOATING_POINT
+
+                # Check for sign.
+                if it.curr in '+-':
+                    it.next()
+
+                scan_for_digit(it)
+        else:
+            if found_decimal:
+                raise TokenizeError('Invalid digit in octal constant.')
 
     tokens.append(NumberToken(start, it, number_type, precision))
     return True

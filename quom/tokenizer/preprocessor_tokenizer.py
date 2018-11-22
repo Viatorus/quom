@@ -38,7 +38,7 @@ class PreprocessorToken(Token):
 
 
 def scan_for_whitespaces_and_comments(tokens: List[Token], it: CodeIterator):
-    while it.curr:
+    while it.curr != '\0':
         if scan_for_comment(tokens, it):
             continue
         if scan_for_whitespace(tokens, it):
@@ -46,7 +46,7 @@ def scan_for_whitespaces_and_comments(tokens: List[Token], it: CodeIterator):
                 return True
             continue
         break
-    return it.curr == ''
+    return it.curr == '\0'
 
 
 def scan_for_preprocessor_symbol(tokens: List[Token], it: CodeIterator):
@@ -57,7 +57,7 @@ def scan_for_preprocessor_symbol(tokens: List[Token], it: CodeIterator):
 
 
 def scan_for_line_end(tokens: List[Token], it: CodeIterator):
-    while it.curr:
+    while it.curr != '\0':
         if scan_for_whitespaces_and_comments(tokens, it):
             return
         succeeded = scan_for_identifier(tokens, it)
