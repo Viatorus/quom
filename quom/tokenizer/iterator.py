@@ -60,25 +60,25 @@ class RawIterator:
 
     @property
     def prev(self):
-        if 0 <= self._it.prev < len(self):
+        if 0 <= self._it.prev < self._it.length:
             c = self._it.src[self._it.prev]
             return c if c != '\r' else '\n'
         return '\0'
 
     @property
     def curr(self):
-        if 0 <= self._it.curr < len(self):
+        if 0 <= self._it.curr < self._it.length:
             c = self._it.src[self._it.curr]
             return c if c != '\r' else '\n'
         return '\0'
 
     @property
     def lookahead(self):
-        if self._it.curr + 1 >= len(self):
+        if self._it.curr + 1 >= self._it.length:
             return '\0'
 
         nxt = self._step(self._it.src, self._it.curr + 1)
-        if 0 <= nxt < len(self):
+        if 0 <= nxt < self._it.length:
             c = self._it.src[nxt]
             return c if c != '\r' else '\n'
         return '\0'
@@ -100,8 +100,8 @@ class RawIterator:
     def __step(self):
         self._it.prev = self._it.curr
 
-        if self._it.curr + 1 >= len(self):
-            self._it.curr = len(self)
+        if self._it.curr + 1 >= self._it.length:
+            self._it.curr = self._it.length
             return
 
         self._it.prev = self._it.curr
@@ -115,7 +115,7 @@ class RawIterator:
         # Get next character, but:
         # * skip \r followed by an \n
         if src[nxt] == '\r':
-            if nxt + 1 < len(self) and src[nxt + 1] == '\n':
+            if nxt + 1 < self._it.length and src[nxt + 1] == '\n':
                 nxt += 1
         return nxt
 
@@ -125,20 +125,20 @@ class EscapeIterator(RawIterator):
         # Get next character, but:
         # * skip \r followed by an \n
         # * do line wrapping (backslash followed by \r and/or \n)
-        while nxt < len(self):
+        while nxt < self._it.length:
             if src[nxt] == '\r':
-                if nxt + 1 < len(self) and src[nxt + 1] == '\n':
+                if nxt + 1 < self._it.length and src[nxt + 1] == '\n':
                     nxt += 1
                 break
             if src[nxt] == '\\':
-                if nxt + 1 >= len(self):
+                if nxt + 1 >= self._it.length:
                     break
                 if src[nxt + 1] == '\n':
                     nxt += 2
                     continue
                 elif src[nxt + 1] == '\r':
                     nxt += 2
-                    if nxt < len(self) and src[nxt] == '\n':
+                    if nxt < self._it.length and src[nxt] == '\n':
                         nxt += 1
                     continue
             break
@@ -151,20 +151,20 @@ class CodeIterator(RawIterator):
         # * skip \r followed by an \n
         # * do line wrapping (backslash followed by \r and/or \n)
         # * no escape sequence allowed
-        while nxt < len(self):
+        while nxt < self._it.length:
             if src[nxt] == '\r':
-                if nxt + 1 < len(self) and src[nxt + 1] == '\n':
+                if nxt + 1 < self._it.length and src[nxt + 1] == '\n':
                     nxt += 1
                 break
             if src[nxt] == '\\':
-                if nxt + 1 >= len(self):
+                if nxt + 1 >= self._it.length:
                     raise TokenizeError('Stray \'\\\' in program.')
                 if src[nxt + 1] == '\n':
                     nxt += 2
                     continue
                 elif src[nxt + 1] == '\r':
                     nxt += 2
-                    if nxt < len(self) and src[nxt] == '\n':
+                    if nxt < self._it.length and src[nxt] == '\n':
                         nxt += 1
                     continue
                 else:
