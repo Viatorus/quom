@@ -45,7 +45,7 @@ def scan_for_comment_c_style(tokens: List[Token], it: CodeIterator):
     while it.next() and (it.curr != '*' or it.lookahead != '/'):
         pass
 
-    if it.curr is None:
+    if not it.curr:
         raise TokenizeError("C-style comment not terminated!", it)
     it.next()
     it.next()

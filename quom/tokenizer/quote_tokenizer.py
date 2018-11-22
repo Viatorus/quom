@@ -69,7 +69,7 @@ def scan_for_quote_single(tokens: List[Token], it: CodeIterator):
             backslashes = 0
 
     # Check if end of file is reached.
-    if it.curr is None:
+    if not it.curr:
         raise TokenizeError("Character sequence not terminated!", it)
     it.next()
 
@@ -98,7 +98,7 @@ def scan_for_quote_double(tokens: List[Token], it: CodeIterator):
                 backslashes = 0
 
         # Check if end of file is reached.
-        if it.curr is None:
+        if not it.curr:
             raise TokenizeError("Character sequence not terminated!", it)
         it.next()
     else:
@@ -122,7 +122,7 @@ def scan_for_quote_double(tokens: List[Token], it: CodeIterator):
             if len(string) > len(delimiter) and string.endswith(delimiter):
                 break
 
-        if it.curr is None:
+        if not it.curr:
             raise TokenizeError('No terminating delimiter inside raw string literal found!', it)
         it.next()
 

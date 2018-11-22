@@ -55,25 +55,25 @@ class RawIterator:
         if 0 <= self._it.prev < len(self):
             c = self._it.src[self._it.prev]
             return c if c != '\r' else '\n'
-        return None
+        return ''
 
     @property
     def curr(self):
         if 0 <= self._it.curr < len(self):
             c = self._it.src[self._it.curr]
             return c if c != '\r' else '\n'
-        return None
+        return ''
 
     @property
     def lookahead(self):
         if self._it.curr + 1 >= len(self):
-            return None
+            return ''
 
         nxt = self._step(self._it.src, self._it.curr + 1)
         if 0 <= nxt < len(self):
             c = self._it.src[nxt]
             return c if c != '\r' else '\n'
-        return None
+        return ''
 
     def copy(self):
         tmp = copy.deepcopy(self)

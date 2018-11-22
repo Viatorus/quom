@@ -46,7 +46,7 @@ def scan_for_whitespaces_and_comments(tokens: List[Token], it: CodeIterator):
                 return True
             continue
         break
-    return it.curr is None
+    return it.curr == ''
 
 
 def scan_for_preprocessor_symbol(tokens: List[Token], it: CodeIterator):
@@ -117,7 +117,7 @@ def scan_for_preprocessor(tokens: List[Token], it: CodeIterator):
 
     name = scan_for_name(it)
     if not name:
-        raise TokenizeError('Illegal preprocessor instruction.', start + 1)
+        raise TokenizeError('Illegal preprocessor instruction.', start)
     name = ''.join(name)
 
     preprocessor_type = PreprocessorType.UNKNOWN

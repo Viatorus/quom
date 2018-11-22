@@ -52,7 +52,7 @@ def scan_for_hexadecimal(it: CodeIterator):
 
 
 def scan_for_binary(it: CodeIterator):
-    if it.curr and it.curr not in '01':
+    if it.curr not in '01':
         return False
 
     while it.next() and it.curr in ['0', '1', '\'']:
@@ -73,14 +73,14 @@ def scan_for_number(tokens: List[Token], it: CodeIterator):
     number_type = NumberType.DECIMAL
     precision = Precision.INTEGER
 
-    if it.curr and it.prev == '0' and it.curr in 'xX' and it.lookahead and ('0' <= it.lookahead <= '9' or 'a' <= it.lookahead <= 'f' or 'A' <= it.lookahead <= 'F'):
+    if it.prev == '0' and it.curr in 'xX' and it.lookahead and ('0' <= it.lookahead <= '9' or 'a' <= it.lookahead <= 'f' or 'A' <= it.lookahead <= 'F'):
         it.next()
         number_type = NumberType.HEX
 
         scan_for_hexadecimal(it)
 
         # Check for radix separator.
-        if it.curr and it.curr == '.':
+        if it.curr == '.':
             it.next()
             precision = Precision.FLOATING_POINT
 
@@ -89,17 +89,17 @@ def scan_for_number(tokens: List[Token], it: CodeIterator):
             if not it.curr or it.curr not in 'pP':
                 raise TokenizeError('Hexadecimal floating constants require an exponent!', it)
 
-        if it.curr and it.curr in 'pP':
+        if it.curr in 'pP':
             it.next()
             precision = Precision.FLOATING_POINT
 
             # Check for sign.
-            if it.curr and it.curr in ['+', '-']:
+            if it.curr in ['+', '-']:
                 it.next()
 
             scan_for_hexadecimal(it)
 
-    elif it.curr and it.prev == '0' and it.curr in 'bB' and it.lookahead and '0' <= it.lookahead <= '1':
+    elif it.prev == '0' and it.curr in 'bB' and it.lookahead and '0' <= it.lookahead <= '1':
         number_type = NumberType.BINARY
         it.next()
         scan_for_binary(it)
@@ -114,7 +114,7 @@ def scan_for_number(tokens: List[Token], it: CodeIterator):
             scan_for_digit(it)
 
         # Check for radix separator.
-        if it.curr and it.curr == '.':
+        if it.curr == '.':
             it.next()
             precision = Precision.FLOATING_POINT
         elif maybe_ocal and (not it.curr or it.curr not in 'eE'):
@@ -123,7 +123,7 @@ def scan_for_number(tokens: List[Token], it: CodeIterator):
         scan_for_digit(it)
 
         # Check for exponent.
-        if it.curr and it.curr in 'eE':
+        if it.curr in 'eE':
             it.next()
             precision = Precision.FLOATING_POINT
 

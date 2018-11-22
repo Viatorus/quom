@@ -5,7 +5,7 @@ from quom.tokenizer.iterator import RawIterator, EscapeIterator, CodeIterator, S
 
 
 def check_iterator(it, res):
-    crr = None
+    crr = ''
 
     for c in res:
         prv = crr
@@ -16,7 +16,7 @@ def check_iterator(it, res):
 
         it.next()
 
-    assert it.next() is None
+    assert it.next() == ''
 
 
 def test_raw_iterator():
@@ -60,16 +60,16 @@ def test_raw_iterator():
     check_iterator(it, '\n')
 
     it = RawIterator('a')
-    assert it.lookahead is None
+    assert it.lookahead == ''
 
     it = RawIterator('\\')
-    assert it.lookahead is None
+    assert it.lookahead == ''
 
     it = RawIterator('\\\na')
     assert it.lookahead == '\n'
 
     it = RawIterator('')
-    assert it.lookahead is None
+    assert it.lookahead == ''
 
 
 def test_escape_iterator():
@@ -113,16 +113,16 @@ def test_escape_iterator():
     check_iterator(it, '')
 
     it = EscapeIterator('a')
-    assert it.lookahead is None
+    assert it.lookahead == ''
 
     it = EscapeIterator('\\')
-    assert it.lookahead is None
+    assert it.lookahead == ''
 
     it = EscapeIterator('\\\na')
-    assert it.lookahead is None
+    assert it.lookahead == ''
 
     it = EscapeIterator('')
-    assert it.lookahead is None
+    assert it.lookahead == ''
 
 
 def test_code_iterator():
@@ -165,16 +165,16 @@ def test_code_iterator():
     check_iterator(it, '')
 
     it = CodeIterator('a')
-    assert it.lookahead is None
+    assert it.lookahead == ''
 
     it = CodeIterator('\\\na')
-    assert it.lookahead is None
+    assert it.lookahead == ''
 
     with pytest.raises(TokenizeError):
         CodeIterator('\\a')
 
     it = CodeIterator('')
-    assert it.lookahead is None
+    assert it.lookahead == ''
 
 
 def test_copy():
