@@ -25,8 +25,8 @@ def scan_for_comment_cpp_style(tokens: List[Token], it: CodeIterator):
     start = it.copy()
     it.next()
 
-    # Parse until \n.
-    while it.next() and it.curr != '\n':
+    # Parse until line break.
+    while it.next() and it.curr not in '\n\r':
         pass
 
     tokens.append(CommentToken(start, it, CommentType.CPP_STYLE))

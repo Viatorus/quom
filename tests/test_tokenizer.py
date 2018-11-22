@@ -75,6 +75,21 @@ def test_whitespace():
     tokens = tokenize('\n')
     check_tokens(tokens, [TokenType.WHITESPACE])
 
+    tokens = tokenize('\r\n')
+    check_tokens(tokens, [TokenType.WHITESPACE])
+
+    tokens = tokenize('\r\n\r')
+    check_tokens(tokens, [TokenType.WHITESPACE, TokenType.WHITESPACE])
+
+    tokens = tokenize('\r\n\n')
+    check_tokens(tokens, [TokenType.WHITESPACE, TokenType.WHITESPACE])
+
+    tokens = tokenize('\r\n\r\n\n')
+    check_tokens(tokens, [TokenType.WHITESPACE, TokenType.WHITESPACE, TokenType.WHITESPACE])
+
+    tokens = tokenize('\n\r\r')
+    check_tokens(tokens, [TokenType.WHITESPACE, TokenType.WHITESPACE, TokenType.WHITESPACE])
+
     tokens = tokenize(' \n ')
     check_tokens(tokens, [TokenType.WHITESPACE, TokenType.WHITESPACE, TokenType.WHITESPACE])
 

@@ -24,22 +24,22 @@ def test_raw_iterator():
     check_iterator(it, 'ab')
 
     it = RawIterator('a\rb')
-    check_iterator(it, 'a\nb')
+    check_iterator(it, 'a\rb')
 
     it = RawIterator('a\r\nb')
-    check_iterator(it, 'a\nb')
+    check_iterator(it, 'a\r\nb')
 
     it = RawIterator('a\\\r\nb')
-    check_iterator(it, 'a\\\nb')
+    check_iterator(it, 'a\\\r\nb')
 
     it = RawIterator('a\\\nb')
     check_iterator(it, 'a\\\nb')
 
     it = RawIterator('a\\\rb')
-    check_iterator(it, 'a\\\nb')
+    check_iterator(it, 'a\\\rb')
 
     it = RawIterator("a\\\r\\\r\nb")
-    check_iterator(it, "a\\\n\\\nb")
+    check_iterator(it, "a\\\r\\\r\nb")
 
     it = RawIterator('a\\b')
     check_iterator(it, 'a\\b')
@@ -57,7 +57,7 @@ def test_raw_iterator():
     check_iterator(it, '\\\n')
 
     it = RawIterator('\r')
-    check_iterator(it, '\n')
+    check_iterator(it, '\r')
 
     it = RawIterator('a')
     assert it.lookahead == '\0'
@@ -77,10 +77,10 @@ def test_escape_iterator():
     check_iterator(it, 'ab')
 
     it = EscapeIterator('a\rb')
-    check_iterator(it, 'a\nb')
+    check_iterator(it, 'a\rb')
 
     it = EscapeIterator('a\r\nb')
-    check_iterator(it, 'a\nb')
+    check_iterator(it, 'a\r\nb')
 
     it = EscapeIterator('a\\\r\nb')
     check_iterator(it, 'ab')
@@ -130,10 +130,10 @@ def test_code_iterator():
     check_iterator(it, 'ab')
 
     it = CodeIterator('a\rb')
-    check_iterator(it, 'a\nb')
+    check_iterator(it, 'a\rb')
 
     it = CodeIterator('a\r\nb')
-    check_iterator(it, 'a\nb')
+    check_iterator(it, 'a\r\nb')
 
     it = CodeIterator('a\\\r\nb')
     check_iterator(it, 'ab')

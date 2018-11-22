@@ -28,9 +28,12 @@ def scan_for_whitespace(tokens: List[Token], it: CodeIterator):
 
         tokens.append(WhitespaceToken(start, it, WhitespaceType.SPACE))
         return True
-    elif it.curr == '\n':
+    elif it.curr in '\n\r':
         start = it.copy()
         it.next()
+
+        if it.prev == '\r' and it.curr == '\n':
+            it.next()
 
         tokens.append(WhitespaceToken(start, it, WhitespaceType.LINE_BREAK))
         return True

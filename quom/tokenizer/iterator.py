@@ -61,15 +61,13 @@ class RawIterator:
     @property
     def prev(self):
         if 0 <= self._it.prev < self._it.length:
-            c = self._it.src[self._it.prev]
-            return c if c != '\r' else '\n'
+            return self._it.src[self._it.prev]
         return '\0'
 
     @property
     def curr(self):
         if 0 <= self._it.curr < self._it.length:
-            c = self._it.src[self._it.curr]
-            return c if c != '\r' else '\n'
+            return self._it.src[self._it.curr]
         return '\0'
 
     @property
@@ -79,8 +77,7 @@ class RawIterator:
 
         nxt = self._step(self._it.src, self._it.curr + 1)
         if 0 <= nxt < self._it.length:
-            c = self._it.src[nxt]
-            return c if c != '\r' else '\n'
+            return self._it.src[nxt]
         return '\0'
 
     def copy(self):
@@ -112,24 +109,15 @@ class RawIterator:
         self._it.curr = self._step(src, nxt)
 
     def _step(self, src, nxt):
-        # Get next character, but:
-        # * skip \r followed by an \n
-        if src[nxt] == '\r':
-            if nxt + 1 < self._it.length and src[nxt + 1] == '\n':
-                nxt += 1
+        # Get next character.
         return nxt
 
 
 class EscapeIterator(RawIterator):
     def _step(self, src, nxt):
         # Get next character, but:
-        # * skip \r followed by an \n
         # * do line wrapping (backslash followed by \r and/or \n)
         while nxt < self._it.length:
-            if src[nxt] == '\r':
-                if nxt + 1 < self._it.length and src[nxt + 1] == '\n':
-                    nxt += 1
-                break
             if src[nxt] == '\\':
                 if nxt + 1 >= self._it.length:
                     break
@@ -148,14 +136,9 @@ class EscapeIterator(RawIterator):
 class CodeIterator(RawIterator):
     def _step(self, src, nxt):
         # Get next character, but:
-        # * skip \r followed by an \n
         # * do line wrapping (backslash followed by \r and/or \n)
         # * no escape sequence allowed
         while nxt < self._it.length:
-            if src[nxt] == '\r':
-                if nxt + 1 < self._it.length and src[nxt + 1] == '\n':
-                    nxt += 1
-                break
             if src[nxt] == '\\':
                 if nxt + 1 >= self._it.length:
                     raise TokenizeError('Stray \'\\\' in program.')
