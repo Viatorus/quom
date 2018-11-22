@@ -20,7 +20,9 @@ class Span:
         return self._length
 
     def __iter__(self):
-        return copy.deepcopy(self)
+        tmp = Span(self.it)
+        tmp._length = self._length
+        return tmp
 
     def __next__(self):
         if self.it._it.curr >= len(self):
@@ -36,6 +38,12 @@ class Iterable:
         self.length = len(src)
         self.prev = -1
         self.curr = -1
+
+    def copy(self):
+        tmp = Iterable(self.src)
+        tmp.prev = self.prev
+        tmp.curr = self.curr
+        return tmp
 
 
 class RawIterator:
@@ -76,8 +84,7 @@ class RawIterator:
         return '\0'
 
     def copy(self):
-        tmp = copy.deepcopy(self)
-        return tmp
+        return self.__class__(self._it.copy())
 
     def __len__(self):
         return self._it.length
