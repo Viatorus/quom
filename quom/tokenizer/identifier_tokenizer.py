@@ -21,7 +21,7 @@ def scan_for_name(it: CodeIterator):
         return None
     start = it.copy()
 
-    while next(it, None) and (it.curr.isalnum() or it.curr == '_'):
+    while it.next() and (it.curr.isalnum() or it.curr == '_'):
         pass
     return Span(start, it)
 

@@ -26,7 +26,7 @@ class Span:
         if self.it._it.curr >= len(self):
             raise StopIteration()
         tmp = self.it.curr
-        next(self.it)
+        self.it.next()
         return tmp
 
 
@@ -46,6 +46,8 @@ class RawIterator:
             self._it = it._it
         else:
             self._it = Iterable(it)
+        # Init iterator if not already done.
+        if self._it.curr == -1:
             self.__step()
 
     @property
@@ -83,9 +85,7 @@ class RawIterator:
     def __iter__(self):
         return Span(self)
 
-    def __next__(self):
-        if self._it.curr >= len(self):
-            raise StopIteration()
+    def next(self):
         self.__step()
         return self.curr
 

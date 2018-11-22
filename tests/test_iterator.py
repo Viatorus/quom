@@ -14,10 +14,9 @@ def check_iterator(it, res):
         assert it.prev == prv
         assert it.curr == crr
 
-        next(it)
+        it.next()
 
-    with pytest.raises(StopIteration):
-        next(it)
+    assert it.next() is None
 
 
 def test_raw_iterator():
@@ -183,11 +182,11 @@ def test_copy():
     assert it1.curr == 'a'
 
     it2 = it1.copy()
-    next(it2)
+    it2.next()
     assert it1.curr == 'a'
     assert it2.curr == 'b'
 
-    next(it1)
+    it1.next()
     assert it1.curr == 'b'
     assert it2.curr == 'b'
 
@@ -197,17 +196,17 @@ def test_iterator_casting():
     assert it.curr == 'a'
 
     it = EscapeIterator(it)
-    next(it)
+    it.next()
     assert it.curr == '\\'
-    next(it)
+    it.next()
     assert it.curr == 'b'
 
     it = RawIterator(it)
-    next(it)
+    it.next()
     assert it.curr == '\\'
-    next(it)
+    it.next()
     assert it.curr == '\n'
-    next(it)
+    it.next()
     assert it.curr == 'c'
 
 
@@ -217,13 +216,13 @@ def test_span():
     assert ''.join(it1) == 'abc'
 
     it2 = it1.copy()
-    next(it2)
+    it2.next()
     assert ''.join(it2) == 'bc'
     assert ''.join(it2) == 'bc'
 
     it1 = CodeIterator('a ')
     it2 = it1.copy()
-    next(it2)
+    it2.next()
 
     span = Span(it1, it2)
     assert ''.join(span) == 'a'

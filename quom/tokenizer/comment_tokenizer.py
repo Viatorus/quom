@@ -23,10 +23,10 @@ def scan_for_comment_cpp_style(tokens: List[Token], it: CodeIterator):
         return False
     it = EscapeIterator(it)
     start = it.copy()
-    next(it)
+    it.next()
 
     # Parse until \n.
-    while next(it, None) and it.curr != '\n':
+    while it.next() and it.curr != '\n':
         pass
 
     tokens.append(CommentToken(start, it, CommentType.CPP_STYLE))
@@ -39,16 +39,16 @@ def scan_for_comment_c_style(tokens: List[Token], it: CodeIterator):
         return False
     it = EscapeIterator(it)
     start = it.copy()
-    next(it)
+    it.next()
 
     # Parse until file end or */.
-    while next(it, None) and (it.curr != '*' or it.lookahead != '/'):
+    while it.next() and (it.curr != '*' or it.lookahead != '/'):
         pass
 
     if it.curr is None:
         raise TokenizeError("C-style comment not terminated!", it)
-    next(it)
-    next(it, None)
+    it.next()
+    it.next()
 
     tokens.append(CommentToken(start, it, CommentType.C_STYLE))
     return True

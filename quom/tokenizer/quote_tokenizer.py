@@ -62,7 +62,7 @@ def scan_for_quote_single(tokens: List[Token], it: CodeIterator):
 
     # Parse until non escaped '.
     backslashes = 0
-    while next(it, None) and (it.curr != '\'' or backslashes % 2 != 0):
+    while it.next() and (it.curr != '\'' or backslashes % 2 != 0):
         if it.curr == '\\':
             backslashes += 1
         else:
@@ -71,7 +71,7 @@ def scan_for_quote_single(tokens: List[Token], it: CodeIterator):
     # Check if end of file is reached.
     if it.curr is None:
         raise TokenizeError("Character sequence not terminated!", it)
-    next(it, None)
+    it.next()
 
     tokens.append(QuoteToken(start, it, QuoteType.SINGLE))
     return True
@@ -91,7 +91,7 @@ def scan_for_quote_double(tokens: List[Token], it: CodeIterator):
                             LiteralEncoding.UTF32]:
         # Parse until end of line or non escaped ".
         backslashes = 0
-        while next(it, None) and (it.curr != '"' or backslashes % 2 != 0):
+        while it.next() and (it.curr != '"' or backslashes % 2 != 0):
             if it.curr == '\\':
                 backslashes += 1
             else:
@@ -100,12 +100,12 @@ def scan_for_quote_double(tokens: List[Token], it: CodeIterator):
         # Check if end of file is reached.
         if it.curr is None:
             raise TokenizeError("Character sequence not terminated!", it)
-        next(it, None)
+        it.next()
     else:
         delimiter = ""
 
         # Parse until end of introductory delimiter.
-        while next(it, None) and it.curr != '(':
+        while it.next() and it.curr != '(':
             delimiter += it.curr
 
         if it.curr is None:
@@ -117,14 +117,14 @@ def scan_for_quote_double(tokens: List[Token], it: CodeIterator):
         # Parse until delimiter occours again.
         # TODO: Please optimize me.
         string = ""
-        while next(it, None):
+        while it.next():
             string += it.curr
             if len(string) > len(delimiter) and string.endswith(delimiter):
                 break
 
         if it.curr is None:
             raise TokenizeError('No terminating delimiter inside raw string literal found!', it)
-        next(it, None)
+        it.next()
 
     tokens.append(QuoteToken(start, it, QuoteType.Double, literal_encoding))
     return True

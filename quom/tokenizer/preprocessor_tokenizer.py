@@ -52,7 +52,7 @@ def scan_for_whitespaces_and_comments(tokens: List[Token], it: CodeIterator):
 def scan_for_preprocessor_symbol(tokens: List[Token], it: CodeIterator):
     if it.curr != '#':
         return
-    next(it, None)
+    it.next()
     return True
 
 
@@ -82,7 +82,7 @@ def scan_for_preprocessor_include(tokens: List[Token], it: CodeIterator):
     if it.curr == '"':
         # Parse until non escaped ".
         backslashes = 0
-        while next(it, None) and it.curr != '\n' and (it.curr != '"' or backslashes % 2 != 0):
+        while it.next() and it.curr != '\n' and (it.curr != '"' or backslashes % 2 != 0):
             if it.curr == '\\':
                 backslashes += 1
             else:
@@ -91,24 +91,24 @@ def scan_for_preprocessor_include(tokens: List[Token], it: CodeIterator):
         # Check if end of line is reached.
         if it.curr != '"':
             raise TokenizeError("Character sequence not terminated!", it)
-        next(it, None)
+        it.next()
 
     elif it.curr == '<':
         # Scan until terminating >.
-        while next(it, None) and it.curr != '\n' and it.curr != '>':
+        while it.next() and it.curr != '\n' and it.curr != '>':
             pass
 
         # Check if end of line is reached.
         if it.curr != '>':
             raise TokenizeError("Character sequence not terminated!", it)
-        next(it, None)
+        it.next()
 
 
 def scan_for_preprocessor(tokens: List[Token], it: CodeIterator):
     if it.curr != '#':
         return None
     start = it.copy()
-    next(it, None)
+    it.next()
 
     preprocessor_tokens = []
     if scan_for_whitespaces_and_comments(preprocessor_tokens, it):

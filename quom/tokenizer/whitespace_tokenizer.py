@@ -23,14 +23,14 @@ WHITESPACE_CHARACTERS = ' \t\v\f'
 def scan_for_whitespace(tokens: List[Token], it: CodeIterator):
     if it.curr in WHITESPACE_CHARACTERS:
         start = it.copy()
-        while next(it, None) and it.curr in WHITESPACE_CHARACTERS:
+        while it.next() and it.curr in WHITESPACE_CHARACTERS:
             pass
 
         tokens.append(WhitespaceToken(start, it, WhitespaceType.SPACE))
         return True
     elif it.curr == '\n':
         start = it.copy()
-        next(it, None)
+        it.next()
 
         tokens.append(WhitespaceToken(start, it, WhitespaceType.LINE_BREAK))
         return True

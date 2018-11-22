@@ -29,7 +29,7 @@ def scan_for_digit(it: CodeIterator):
     if not it.curr or not it.curr.isnumeric():
         return False
 
-    while next(it, None) and (it.curr.isnumeric() or it.curr == '\''):
+    while it.next() and (it.curr.isnumeric() or it.curr == '\''):
         pass
 
     if it.prev == '\'':
@@ -42,7 +42,7 @@ def scan_for_hexadecimal(it: CodeIterator):
     if not it.curr or not it.curr.isnumeric() and 'a' > it.curr > 'f' and 'A' > it.curr > 'F':
         return False
 
-    while next(it, None) and (it.curr.isnumeric() or 'a' <= it.curr <= 'f' or 'A' <= it.curr <= 'F' or it.curr == '\''):
+    while it.next() and (it.curr.isnumeric() or 'a' <= it.curr <= 'f' or 'A' <= it.curr <= 'F' or it.curr == '\''):
         pass
 
     if it.prev == '\'':
@@ -55,7 +55,7 @@ def scan_for_binary(it: CodeIterator):
     if it.curr and it.curr not in '01':
         return False
 
-    while next(it, None) and it.curr in ['0', '1', '\'']:
+    while it.next() and it.curr in ['0', '1', '\'']:
         pass
 
     if it.prev == '\'':
@@ -68,20 +68,20 @@ def scan_for_number(tokens: List[Token], it: CodeIterator):
     if not it.curr.isdigit() and (it.curr != '.' or not it.lookahead or not it.lookahead.isdigit()):
         return False
     start = it.copy()
-    next(it, None)
+    it.next()
 
     number_type = NumberType.DECIMAL
     precision = Precision.INTEGER
 
     if it.curr and it.prev == '0' and it.curr in 'xX' and it.lookahead and ('0' <= it.lookahead <= '9' or 'a' <= it.lookahead <= 'f' or 'A' <= it.lookahead <= 'F'):
-        next(it, None)
+        it.next()
         number_type = NumberType.HEX
 
         scan_for_hexadecimal(it)
 
         # Check for radix separator.
         if it.curr and it.curr == '.':
-            next(it, None)
+            it.next()
             precision = Precision.FLOATING_POINT
 
             scan_for_hexadecimal(it)
@@ -90,18 +90,18 @@ def scan_for_number(tokens: List[Token], it: CodeIterator):
                 raise TokenizeError('Hexadecimal floating constants require an exponent!', it)
 
         if it.curr and it.curr in 'pP':
-            next(it, None)
+            it.next()
             precision = Precision.FLOATING_POINT
 
             # Check for sign.
             if it.curr and it.curr in ['+', '-']:
-                next(it, None)
+                it.next()
 
             scan_for_hexadecimal(it)
 
     elif it.curr and it.prev == '0' and it.curr in 'bB' and it.lookahead and '0' <= it.lookahead <= '1':
         number_type = NumberType.BINARY
-        next(it, None)
+        it.next()
         scan_for_binary(it)
     elif it.curr:
         number_type = NumberType.DECIMAL
@@ -115,7 +115,7 @@ def scan_for_number(tokens: List[Token], it: CodeIterator):
 
         # Check for radix separator.
         if it.curr and it.curr == '.':
-            next(it, None)
+            it.next()
             precision = Precision.FLOATING_POINT
         elif maybe_ocal and (not it.curr or it.curr not in 'eE'):
             number_type = NumberType.OCTAL
@@ -124,12 +124,12 @@ def scan_for_number(tokens: List[Token], it: CodeIterator):
 
         # Check for exponent.
         if it.curr and it.curr in 'eE':
-            next(it)
+            it.next()
             precision = Precision.FLOATING_POINT
 
             # Check for sign.
             if it.curr in '+-':
-                next(it, None)
+                it.next()
 
             scan_for_digit(it)
 
