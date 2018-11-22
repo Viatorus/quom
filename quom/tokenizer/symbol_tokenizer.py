@@ -16,7 +16,7 @@ class SymbolToken(Token):
 
 
 def scan_for_symbol(tokens: List[Token], it: CodeIterator):
-    if it.curr not in '+-*/.,:?%!=<>(){}[]&|':
+    if it.curr not in ';+-*/.,:;?%!=<>(){}[]&|~^':
         return False
     start = it.copy()
     it.next()
