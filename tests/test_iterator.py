@@ -1,7 +1,4 @@
-import pytest
-
-from quom.tokenizer import TokenizeError
-from quom.tokenizer.iterator import RawIterator, EscapeIterator, CodeIterator, Span
+from quom.tokenizer.iterator import RawIterator, LineWrapIterator, Span
 
 
 def check_iterator(it, res):
@@ -73,112 +70,63 @@ def test_raw_iterator():
 
 
 def test_escape_iterator():
-    it = EscapeIterator('ab')
+    it = LineWrapIterator('ab')
     check_iterator(it, 'ab')
 
-    it = EscapeIterator('a\rb')
+    it = LineWrapIterator('a\rb')
     check_iterator(it, 'a\rb')
 
-    it = EscapeIterator('a\r\nb')
+    it = LineWrapIterator('a\r\nb')
     check_iterator(it, 'a\r\nb')
 
-    it = EscapeIterator('a\\\r\nb')
+    it = LineWrapIterator('a\\\r\nb')
     check_iterator(it, 'ab')
 
-    it = EscapeIterator('a\\\nb')
+    it = LineWrapIterator('a\\\nb')
     check_iterator(it, 'ab')
 
-    it = EscapeIterator('a\\\rb')
+    it = LineWrapIterator('a\\\rb')
     check_iterator(it, 'ab')
 
-    it = EscapeIterator('a\\\\\nb')
+    it = LineWrapIterator('a\\\\\nb')
     check_iterator(it, 'a\\b')
 
-    it = EscapeIterator("a\\\r\\\r\nb")
+    it = LineWrapIterator("a\\\r\\\r\nb")
     check_iterator(it, "ab")
 
-    it = EscapeIterator('a\\b')
+    it = LineWrapIterator('a\\b')
     check_iterator(it, 'a\\b')
 
-    it = EscapeIterator('"\\a')
+    it = LineWrapIterator('"\\a')
     check_iterator(it, '"\\a')
 
-    it = EscapeIterator('\\\\')
+    it = LineWrapIterator('\\\\')
     check_iterator(it, '\\\\')
 
-    it = EscapeIterator('\\')
+    it = LineWrapIterator('\\')
     check_iterator(it, '\\')
 
-    it = EscapeIterator('\\\n')
+    it = LineWrapIterator('\\\n')
     check_iterator(it, '\0')
 
-    it = EscapeIterator('a')
+    it = LineWrapIterator('a')
     assert it.lookahead == '\0'
 
-    it = EscapeIterator('\\')
+    it = LineWrapIterator('\\')
     assert it.lookahead == '\0'
 
-    it = EscapeIterator('\\\na')
+    it = LineWrapIterator('\\\na')
     assert it.lookahead == '\0'
 
-    it = EscapeIterator('')
+    it = LineWrapIterator('')
     assert it.lookahead == '\0'
 
-
-def test_code_iterator():
-    it = CodeIterator('ab')
-    check_iterator(it, 'ab')
-
-    it = CodeIterator('a\rb')
-    check_iterator(it, 'a\rb')
-
-    it = CodeIterator('a\r\nb')
-    check_iterator(it, 'a\r\nb')
-
-    it = CodeIterator('a\\\r\nb')
-    check_iterator(it, 'ab')
-
-    it = CodeIterator('a\\\nb')
-    check_iterator(it, 'ab')
-
-    it = CodeIterator('a\\\rb')
-    check_iterator(it, 'ab')
-
-    it = CodeIterator("a\\\r\\\r\nb")
-    check_iterator(it, "ab")
-
-    it = CodeIterator('a\\b')
-    with pytest.raises(TokenizeError):
-        check_iterator(it, 'a\\b')
-
-    it = CodeIterator('"\\a')
-    with pytest.raises(TokenizeError):
-        check_iterator(it, '"\\a')
-
-    with pytest.raises(TokenizeError):
-         CodeIterator('\\\\')
-
-    with pytest.raises(TokenizeError):
-        CodeIterator('\\')
-
-    it = CodeIterator('\\\n')
-    check_iterator(it, '')
-
-    it = CodeIterator('a')
-    assert it.lookahead == '\0'
-
-    it = CodeIterator('\\\na')
-    assert it.lookahead == '\0'
-
-    with pytest.raises(TokenizeError):
-        CodeIterator('\\a')
-
-    it = CodeIterator('')
+    it = LineWrapIterator('a\\\n')
     assert it.lookahead == '\0'
 
 
 def test_copy():
-    it1 = CodeIterator('ab')
+    it1 = LineWrapIterator('ab')
     assert it1.curr == 'a'
 
     it2 = it1.copy()
@@ -192,10 +140,10 @@ def test_copy():
 
 
 def test_iterator_casting():
-    it = CodeIterator('a\\\r\\b\\\nc')
+    it = LineWrapIterator('a\\\r\\b\\\nc')
     assert it.curr == 'a'
 
-    it = EscapeIterator(it)
+    it = LineWrapIterator(it)
     it.next()
     assert it.curr == '\\'
     it.next()
@@ -211,7 +159,7 @@ def test_iterator_casting():
 
 
 def test_span():
-    it1 = CodeIterator('abc')
+    it1 = LineWrapIterator('abc')
     assert ''.join(it1) == 'abc'
     assert ''.join(it1) == 'abc'
 
@@ -220,7 +168,7 @@ def test_span():
     assert ''.join(it2) == 'bc'
     assert ''.join(it2) == 'bc'
 
-    it1 = CodeIterator('a ')
+    it1 = LineWrapIterator('a ')
     it2 = it1.copy()
     it2.next()
 

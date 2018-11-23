@@ -114,7 +114,7 @@ class RawIterator:
         return nxt
 
 
-class EscapeIterator(RawIterator):
+class LineWrapIterator(RawIterator):
     def _step(self, src, nxt):
         # Get next character, but:
         # * do line wrapping (backslash followed by \r and/or \n)
@@ -130,28 +130,5 @@ class EscapeIterator(RawIterator):
                     if nxt < self._it.length and src[nxt] == '\n':
                         nxt += 1
                     continue
-            break
-        return nxt
-
-
-class CodeIterator(RawIterator):
-    def _step(self, src, nxt):
-        # Get next character, but:
-        # * do line wrapping (backslash followed by \r and/or \n)
-        # * no escape sequence allowed
-        while nxt < self._it.length:
-            if src[nxt] == '\\':
-                if nxt + 1 >= self._it.length:
-                    raise TokenizeError('Stray \'\\\' in program.')
-                if src[nxt + 1] == '\n':
-                    nxt += 2
-                    continue
-                elif src[nxt + 1] == '\r':
-                    nxt += 2
-                    if nxt < self._it.length and src[nxt] == '\n':
-                        nxt += 1
-                    continue
-                else:
-                    raise TokenizeError('Stray \'\\\' in program.')
             break
         return nxt
