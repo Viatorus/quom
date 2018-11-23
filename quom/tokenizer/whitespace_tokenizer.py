@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import List
 
-from .iterator import CodeIterator
+from .iterator import LineWrapIterator
 from .token import Token, TokenType
 
 
@@ -20,7 +20,7 @@ class WhitespaceToken(Token):
 WHITESPACE_CHARACTERS = ' \t\v\f'
 
 
-def scan_for_whitespace(tokens: List[Token], it: CodeIterator):
+def scan_for_whitespace(tokens: List[Token], it: LineWrapIterator):
     if it.curr in WHITESPACE_CHARACTERS:
         start = it.copy()
         while it.next() and it.curr in WHITESPACE_CHARACTERS:

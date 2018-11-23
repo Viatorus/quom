@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import List
 
-from .iterator import CodeIterator, EscapeIterator
+from .iterator import LineWrapIterator
 from .token import Token, TokenType
 from .tokenize_error import TokenizeError
 
@@ -17,11 +17,11 @@ class CommentToken(Token):
         self.comment_type = comment_type
 
 
-def scan_for_comment_cpp_style(tokens: List[Token], it: CodeIterator):
+def scan_for_comment_cpp_style(tokens: List[Token], it: LineWrapIterator):
     # C++-style comment: //
     if it.curr != '/' or it.lookahead != '/':
         return False
-    it = EscapeIterator(it)
+    it = LineWrapIterator(it)
     start = it.copy()
     it.next()
 
@@ -29,15 +29,15 @@ def scan_for_comment_cpp_style(tokens: List[Token], it: CodeIterator):
     while it.next() and it.curr not in '\n\r':
         pass
 
-    tokens.append(CommentToken(start, it, CommentType.CPP_STYLE))
+    tokens.append(CommentToken(start, it, CommentType.C_STYLE))
     return True
 
 
-def scan_for_comment_c_style(tokens: List[Token], it: CodeIterator):
+def scan_for_comment_c_style(tokens: List[Token], it: LineWrapIterator):
     # C-style comment: /*
     if it.curr != '/' or it.lookahead != '*':
         return False
-    it = EscapeIterator(it)
+    it = LineWrapIterator(it)
     start = it.copy()
     it.next()
 
@@ -54,7 +54,7 @@ def scan_for_comment_c_style(tokens: List[Token], it: CodeIterator):
     return True
 
 
-def scan_for_comment(tokens: List[Token], it: CodeIterator):
+def scan_for_comment(tokens: List[Token], it: LineWrapIterator):
     if not scan_for_comment_cpp_style(tokens, it):
         return scan_for_comment_c_style(tokens, it)
     return True
