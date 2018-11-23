@@ -1,7 +1,9 @@
 from enum import Enum
+from typing import List
 
-from quom.utils.iterable import Iterator
+from .iterator import CodeIterator, EscapeIterator
 from .token import Token, TokenType
+from .tokenize_error import TokenizeError
 
 
 class LiteralEncoding(Enum):
@@ -23,114 +25,111 @@ class QuoteType(Enum):
 
 
 class QuoteToken(Token):
-    def __init__(self, start, end, type: QuoteType, encoding: LiteralEncoding = None):
+    def __init__(self, start, end, quote_type: QuoteType, literal_encoding: LiteralEncoding = None):
         super().__init__(start, end, TokenType.QUOTE)
-        self.quote_type = type
-        self.encoding = encoding
+        self.quote_type = quote_type
+        self.literal_encoding = literal_encoding
 
 
-def to_literal_encoding(identifier: str):
-    if identifier == 'u8':
+def to_literal_encoding(name: str):
+    if name == 'u8':
         return LiteralEncoding.UTF8
-    elif identifier == 'u':
+    elif name == 'u':
         return LiteralEncoding.UTF16
-    elif identifier == 'U':
+    elif name == 'U':
         return LiteralEncoding.UTF32
-    elif identifier == 'L':
+    elif name == 'L':
         return LiteralEncoding.WIDE
-    elif identifier == 'R':
+    elif name == 'R':
         return LiteralEncoding.RAW
-    elif identifier == 'u8R':
+    elif name == 'u8R':
         return LiteralEncoding.RAW_UTF8
-    elif identifier == 'uR':
+    elif name == 'uR':
         return LiteralEncoding.RAW_UTF16
-    elif identifier == 'UR':
+    elif name == 'UR':
         return LiteralEncoding.RAW_UTF32
-    elif identifier == 'LR':
+    elif name == 'LR':
         return LiteralEncoding.RAW_WIDE
-    raise Exception('Unknown literal encoding.')
+    raise TokenizeError('Unknown literal encoding: ' + name)
 
 
-def scan_for_quote_single(it: Iterator, _: Iterator):
-    if it[0] != '\'':
-        return None
-    start = it
-    it += 1
+def scan_for_quote_single(tokens: List[Token], it: CodeIterator):
+    if it.curr != '\'':
+        return False
+    it = EscapeIterator(it)
+    start = it.copy()
 
-    # Parse until end of line or non escaped '.
+    # Parse until non escaped '.
     backslashes = 0
-    while it[0] != '\n' and (it[0] != '\'' or backslashes % 2 != 0):
-        if it[0] == '\\':
+    while it.next() and (it.curr != '\'' or backslashes % 2 != 0):
+        if it.curr == '\\':
             backslashes += 1
         else:
             backslashes = 0
-        it += 1
 
-    # Check if end of line is reached.
-    if it[0] == '\n':
-        raise Exception("Character sequence not terminated!")
-    it += 1
+    # Check if end of file is reached.
+    if it.curr != '\'':
+        raise TokenizeError("Character sequence not terminated!", it)
+    it.next()
 
-    return QuoteToken(start, it, QuoteType.SINGLE)
+    tokens.append(QuoteToken(start, it, QuoteType.SINGLE))
+    return True
 
 
-def scan_for_quote_double(it: Iterator, it_end: Iterator, identifier: str = None):
-    if it[0] != '"':
+def scan_for_quote_double(tokens: List[Token], it: CodeIterator):
+    if it.curr != '"':
         return None
-    start = it
-    it += 1
+    it = EscapeIterator(it)
+    start = it.copy()
 
-    encoding = LiteralEncoding.NONE
-    if identifier:
-        encoding = to_literal_encoding(identifier)
+    literal_encoding = LiteralEncoding.NONE
+    if tokens[-1].token_type == TokenType.IDENTIFIER:
+        literal_encoding = to_literal_encoding(str(tokens[-1]))
 
-    if encoding in [LiteralEncoding.NONE, LiteralEncoding.WIDE, LiteralEncoding.UTF8, LiteralEncoding.UTF16,
-                    LiteralEncoding.UTF32]:
+    if literal_encoding in [LiteralEncoding.NONE, LiteralEncoding.WIDE, LiteralEncoding.UTF8, LiteralEncoding.UTF16,
+                            LiteralEncoding.UTF32]:
         # Parse until end of line or non escaped ".
         backslashes = 0
-        while it[0] != '\n' and (it[0] != '"' or backslashes % 2 != 0):
-            if it[0] == '\\':
+        while it.next() and (it.curr != '"' or backslashes % 2 != 0):
+            if it.curr == '\\':
                 backslashes += 1
             else:
                 backslashes = 0
-            it += 1
 
-        # Check if end of line is reached.
-        if it[0] == '\n':
-            raise Exception("Character sequence not terminated!")
-        it += 1
+        # Check if end of file is reached.
+        if it.curr != '"':
+            raise TokenizeError("Character sequence not terminated!", it)
+        it.next()
     else:
         delimiter = ""
 
         # Parse until end of introductory delimiter.
-        while it != it_end and it[0] != '(':
-            delimiter += it[0]
-            it += 1
+        while it.next() and it.curr != '(':
+            delimiter += it.curr
 
-        if it == it_end:
-            raise Exception('No introductory delimiter inside raw string literal found!')
-        it += 1
+        if it.curr != '(':
+            raise TokenizeError('No introductory delimiter inside raw string literal found!', it)
 
         # Define terminating delimiter.
         delimiter = ')' + delimiter + '"'
 
         # Parse until delimiter occours again.
         # TODO: Please optimize me.
-        string = ""
-        while it != it_end:
-            string += it[0]
-            it += 1
+        string = ''
+        while it.next():
+            string += it.curr
             if len(string) > len(delimiter) and string.endswith(delimiter):
                 break
 
-        if it == it_end:
-            raise Exception('No terminating delimiter inside raw string literal found!')
+        if it.curr != '"':
+            raise TokenizeError('No terminating delimiter inside raw string literal found!', it)
+        it.next()
 
-    return QuoteToken(start, it, QuoteType.Double, encoding)
+    tokens.append(QuoteToken(start, it, QuoteType.Double, literal_encoding))
+    return True
 
 
-def scan_for_quote(it: Iterator, it_end: Iterator):
-    token = scan_for_quote_double(it, it_end)
-    if not token:
-        token = scan_for_quote_single(it, it_end)
-    return token
+def scan_for_quote(tokens: List[Token], it: CodeIterator):
+    if not scan_for_quote_double(tokens, it):
+        return scan_for_quote_single(tokens, it)
+    return True

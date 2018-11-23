@@ -1,18 +1,24 @@
 from enum import Enum
 
+from .iterator import Span
+
 
 class TokenType(Enum):
-    IDENTIFIER = 0
-    SYMBOL = 1
-    NUMBER = 2
-    WHITESPACE = 3
-    PREPROCESSOR = 4
-    COMMENT = 5
-    QUOTE = 6
+    START = 0
+    IDENTIFIER = 1
+    SYMBOL = 2
+    NUMBER = 3
+    WHITESPACE = 4
+    PREPROCESSOR = 5
+    COMMENT = 6
+    QUOTE = 7
+    END = 8
 
 
 class Token:
-    def __init__(self, start, end, type: TokenType):
-        self.start = start
-        self.end = end
-        self.type = type
+    def __init__(self, start, end, token_type: TokenType):
+        self.span = Span(start, end) if start and end else None
+        self.token_type: TokenType = token_type
+
+    def __str__(self):
+        return ''.join(self.span)

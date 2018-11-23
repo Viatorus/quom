@@ -1,7 +1,9 @@
 from enum import Enum
+from typing import List
 
-from quom.utils.iterable import Iterator
+from .iterator import CodeIterator, EscapeIterator
 from .token import Token, TokenType
+from .tokenize_error import TokenizeError
 
 
 class CommentType(Enum):
@@ -10,45 +12,49 @@ class CommentType(Enum):
 
 
 class CommentToken(Token):
-    def __init__(self, start, end, type: CommentType):
+    def __init__(self, start, end, comment_type: CommentType):
         super().__init__(start, end, TokenType.COMMENT)
-        self.comment_type = type
+        self.comment_type = comment_type
 
 
-def scan_for_comment_cpp_style(it: Iterator, _: Iterator):
+def scan_for_comment_cpp_style(tokens: List[Token], it: CodeIterator):
     # C++-style comment: //
-    if it[0] != '/' or it[1] != '/':
-        return None
-    start = it
-    it += 2
+    if it.curr != '/' or it.lookahead != '/':
+        return False
+    it = EscapeIterator(it)
+    start = it.copy()
+    it.next()
 
-    # Parse until \n.
-    while it[0] != '\n':
-        it += 1
+    # Parse until line break.
+    while it.next() and it.curr not in '\n\r':
+        pass
 
-    return CommentToken(start, it, CommentType.CPP_STYLE)
+    tokens.append(CommentToken(start, it, CommentType.CPP_STYLE))
+    return True
 
 
-def scan_for_comment_c_style(it: Iterator, it_end: Iterator):
+def scan_for_comment_c_style(tokens: List[Token], it: CodeIterator):
     # C-style comment: /*
-    if it[0] != '/' or it[1] != '*':
-        return None
-    start = it
-    it += 2
+    if it.curr != '/' or it.lookahead != '*':
+        return False
+    it = EscapeIterator(it)
+    start = it.copy()
+    it.next()
 
     # Parse until file end or */.
-    while (it - 1) != it_end and (it[0] != '*' or it[1] != '/'):
-        it += 1
+    while it.next() and (it.curr != '*' or it.lookahead != '/'):
+        pass
 
-    if (it - 1) == it_end:
-        raise Exception("C-style comment not terminated!")
-    it += 2
+    if it.curr != '*':
+        raise TokenizeError("C-style comment not terminated!", it)
+    it.next()
+    it.next()
 
-    return CommentToken(start, it, CommentType.C_STYLE)
+    tokens.append(CommentToken(start, it, CommentType.C_STYLE))
+    return True
 
 
-def scan_for_comment(it: Iterator, it_end: Iterator):
-    token = scan_for_comment_cpp_style(it, it_end)
-    if not token:
-        token = scan_for_comment_c_style(it, it_end)
-    return token
+def scan_for_comment(tokens: List[Token], it: CodeIterator):
+    if not scan_for_comment_cpp_style(tokens, it):
+        return scan_for_comment_c_style(tokens, it)
+    return True

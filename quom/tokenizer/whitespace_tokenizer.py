@@ -1,6 +1,7 @@
 from enum import Enum
+from typing import List
 
-from quom.utils.iterable import Iterator
+from .iterator import CodeIterator
 from .token import Token, TokenType
 
 
@@ -11,25 +12,29 @@ class WhitespaceType(Enum):
 
 
 class WhitespaceToken(Token):
-    def __init__(self, start, end, type: WhitespaceType):
+    def __init__(self, start, end, whitespace_type: WhitespaceType):
         super().__init__(start, end, TokenType.WHITESPACE)
-        self.whitespace_type = type
+        self.whitespace_type = whitespace_type
 
 
-WHITESPACE_CHARACTERS = [' ', '\t', '\v', '\f']
+WHITESPACE_CHARACTERS = ' \t\v\f'
 
 
-def scan_for_whitespace(it: Iterator, it_end: Iterator):
-    if it[0] in WHITESPACE_CHARACTERS:
-        start = it
-        while it != it_end and it[0] in WHITESPACE_CHARACTERS:
-            it += 1
+def scan_for_whitespace(tokens: List[Token], it: CodeIterator):
+    if it.curr in WHITESPACE_CHARACTERS:
+        start = it.copy()
+        while it.next() and it.curr in WHITESPACE_CHARACTERS:
+            pass
 
-        return WhitespaceToken(start, it, WhitespaceType.SPACE)
+        tokens.append(WhitespaceToken(start, it, WhitespaceType.SPACE))
+        return True
+    elif it.curr in '\n\r':
+        start = it.copy()
+        it.next()
 
-    elif it[0] == '\n':
-        start = it
-        it += 1
+        if it.prev == '\r' and it.curr == '\n':
+            it.next()
 
-        return WhitespaceToken(start, it, WhitespaceType.LINE_BREAK)
-    return None
+        tokens.append(WhitespaceToken(start, it, WhitespaceType.LINE_BREAK))
+        return True
+    return False
