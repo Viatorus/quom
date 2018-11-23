@@ -11,8 +11,8 @@ class Iterator:
 class Span:
     def __init__(self, start: 'RawIterator', end: 'RawIterator' = None):
         self.it = start.copy()
-        if end and end._it.curr < len(self.it):
-            self._length = end._it.curr
+        if end and end._it.curr_pos < len(self.it):
+            self._length = end._it.curr_pos
         else:
             self._length = len(self.it)
 
@@ -25,7 +25,7 @@ class Span:
         return tmp
 
     def __next__(self):
-        if self.it._it.curr >= len(self):
+        if self.it._it.curr_pos >= len(self):
             raise StopIteration()
         tmp = self.it.curr
         self.it.next()
@@ -36,13 +36,15 @@ class Iterable:
     def __init__(self, src):
         self.src = src
         self.length = len(src)
-        self.prev = -1
-        self.curr = -1
+        self.prev = '\0'
+        self.curr = '\0'
+        self.curr_pos = -1
 
     def copy(self):
         tmp = Iterable(self.src)
         tmp.prev = self.prev
         tmp.curr = self.curr
+        tmp.curr_pos = self.curr_pos
         return tmp
 
 
@@ -55,27 +57,23 @@ class RawIterator:
         else:
             self._it = Iterable(it)
         # Init iterator if not already done.
-        if self._it.curr == -1:
+        if self._it.curr_pos == -1:
             self.__step()
 
     @property
     def prev(self):
-        if 0 <= self._it.prev < self._it.length:
-            return self._it.src[self._it.prev]
-        return '\0'
+        return self._it.prev
 
     @property
     def curr(self):
-        if 0 <= self._it.curr < self._it.length:
-            return self._it.src[self._it.curr]
-        return '\0'
+        return self._it.curr
 
     @property
     def lookahead(self):
-        if self._it.curr + 1 >= self._it.length:
+        if self._it.curr_pos + 1 >= self._it.length:
             return '\0'
 
-        nxt = self._step(self._it.src, self._it.curr + 1)
+        nxt = self._step(self._it.src, self._it.curr_pos + 1)
         if 0 <= nxt < self._it.length:
             return self._it.src[nxt]
         return '\0'
@@ -91,22 +89,25 @@ class RawIterator:
 
     def next(self):
         self.__step()
-        curr = self.curr
-        return curr if curr != '\0' else None
+        return True if self._it.curr != '\0' else False
 
     def __step(self):
         self._it.prev = self._it.curr
 
-        if self._it.curr + 1 >= self._it.length:
-            self._it.curr = self._it.length
+        if self._it.curr_pos + 1 >= self._it.length:
+            self._it.curr_pos = self._it.length
+            self._it.curr = '\0'
             return
 
-        self._it.prev = self._it.curr
-
         src = self._it.src
-        nxt = self._it.curr + 1
+        nxt = self._it.curr_pos + 1
 
-        self._it.curr = self._step(src, nxt)
+        self._it.curr_pos = self._step(src, nxt)
+
+        if 0 <= self._it.curr_pos < self._it.length:
+            self._it.curr = self._it.src[self._it.curr_pos]
+        else:
+            self._it.curr = '\0'
 
     def _step(self, src, nxt):
         # Get next character.

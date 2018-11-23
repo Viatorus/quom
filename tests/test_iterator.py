@@ -16,7 +16,7 @@ def check_iterator(it, res):
 
         it.next()
 
-    assert it.next() is None
+    assert it.next() is False
 
 
 def test_raw_iterator():
