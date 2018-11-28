@@ -1,20 +1,23 @@
-from enum import Enum
 from typing import List
 
 from .iterator import LineWrapIterator
-from .token import Token, TokenType
+from .token import Token
 from .tokenize_error import TokenizeError
 
 
-class CommentType(Enum):
-    CPP_STYLE = 0
-    C_STYLE = 1
-
-
 class CommentToken(Token):
-    def __init__(self, start, end, comment_type: CommentType):
-        super().__init__(start, end, TokenType.COMMENT)
-        self.comment_type = comment_type
+    def __init__(self, start, end):
+        super().__init__(start, end)
+
+
+class CppCommentToken(CommentToken):
+    def __init__(self, start, end):
+        super().__init__(start, end)
+
+
+class CCommentToken(CommentToken):
+    def __init__(self, start, end):
+        super().__init__(start, end)
 
 
 def scan_for_comment_cpp_style(tokens: List[Token], it: LineWrapIterator):
@@ -29,7 +32,7 @@ def scan_for_comment_cpp_style(tokens: List[Token], it: LineWrapIterator):
     while it.next() and it.curr not in '\n\r':
         pass
 
-    tokens.append(CommentToken(start, it, CommentType.C_STYLE))
+    tokens.append(CppCommentToken(start, it))
     return True
 
 
@@ -50,7 +53,7 @@ def scan_for_comment_c_style(tokens: List[Token], it: LineWrapIterator):
     it.next()
     it.next()
 
-    tokens.append(CommentToken(start, it, CommentType.C_STYLE))
+    tokens.append(CCommentToken(start, it))
     return True
 
 

@@ -1,4 +1,3 @@
-from enum import Enum
 from typing import List
 
 from .comment_tokenizer import scan_for_comment
@@ -6,51 +5,37 @@ from .iterator import LineWrapIterator
 from .number_tokenizer import scan_for_number
 from .quote_tokenizer import scan_for_quote
 from .remaining_tokenizer import scan_for_remaining
-from .token import Token, TokenType
+from .token import Token
 from .tokenize_error import TokenizeError
-from .whitespace_tokenizer import scan_for_whitespace, WhitespaceType
-
-
-class PreprocessorType(Enum):
-    UNKNOWN = 0,
-    NULL_DIRECTIVE = 1,
-    DEFINE = 2,
-    UNDEFINE = 3,
-    INCLUDE = 4,
-    IF = 5,
-    IF_DEFINED = 6,
-    IF_NOT_DEFINED = 7,
-    ELSE = 8,
-    ELSE_IF = 9,
-    END_IF = 10,
-    LINE = 11,
-    ERROR = 12,
-    PRAGMA = 13,
-    WARNING = 14
+from .whitespace_tokenizer import scan_for_whitespace, LinebreakWhitespaceToken
 
 
 class PreprocessorToken(Token):
-    def __init__(self, start, end, preprocessor_type: PreprocessorType, tokens: List[Token]):
-        super().__init__(start, end, TokenType.PREPROCESSOR)
-        self.preprocessor_type = preprocessor_type
+    def __init__(self, start, end, tokens: List[Token]):
+        super().__init__(start, end)
         self.preprocessor_tokens = tokens
 
 
-def scan_for_whitespaces_and_comments(tokens: List[Token], it: LineWrapIterator):
+class PreprocessorIncludeToken(PreprocessorToken):
+    def __init__(self, start, end, tokens: List[Token]):
+        super().__init__(start, end, tokens)
+
+
+def scan_for_whitespaces_and_comments(it: LineWrapIterator, tokens: List[Token]):
     while it.curr != '\0':
         if scan_for_comment(tokens, it):
             continue
         if scan_for_whitespace(tokens, it):
-            if tokens[-1].whitespace_type == WhitespaceType.LINE_BREAK:
+            if isinstance(tokens[-1], LinebreakWhitespaceToken):
                 return True
             continue
         break
     return it.curr == '\0'
 
 
-def scan_for_line_end(tokens: List[Token], it: LineWrapIterator):
+def scan_for_line_end(it: LineWrapIterator, tokens: List[Token]):
     while it.curr != '\0':
-        if scan_for_whitespaces_and_comments(tokens, it):
+        if scan_for_whitespaces_and_comments(it, tokens):
             return
         succeeded = scan_for_quote(tokens, it)
         if not succeeded:
@@ -59,8 +44,8 @@ def scan_for_line_end(tokens: List[Token], it: LineWrapIterator):
             scan_for_remaining(tokens, it)
 
 
-def scan_for_preprocessor_include(tokens: List[Token], it: LineWrapIterator):
-    if scan_for_whitespaces_and_comments(tokens, it) or it.curr != '"' and it.curr != '<':
+def scan_for_preprocessor_include(start: LineWrapIterator, it: LineWrapIterator, tokens: List[Token]):
+    if scan_for_whitespaces_and_comments(it, tokens) or it.curr != '"' and it.curr != '<':
         raise TokenizeError("Expected \"FILENAME\" or <FILENAME> after include!", it)
 
     it = LineWrapIterator(it)
@@ -89,6 +74,9 @@ def scan_for_preprocessor_include(tokens: List[Token], it: LineWrapIterator):
             raise TokenizeError("Character sequence not terminated!", it)
         it.next()
 
+    scan_for_line_end(it, tokens)
+    return PreprocessorIncludeToken(start, it, tokens)
+
 
 def scan_for_preprocessor(tokens: List[Token], it: LineWrapIterator):
     if it.curr != '#':
@@ -97,19 +85,18 @@ def scan_for_preprocessor(tokens: List[Token], it: LineWrapIterator):
     it.next()
 
     preprocessor_tokens = []
-    if scan_for_whitespaces_and_comments(preprocessor_tokens, it):
-        tokens.append(PreprocessorToken(start, it, PreprocessorType.NULL_DIRECTIVE, preprocessor_tokens))
+    if scan_for_whitespaces_and_comments(it, preprocessor_tokens):
+        tokens.append(PreprocessorToken(start, it, preprocessor_tokens))
         return True
 
     scan_for_remaining(preprocessor_tokens, it)
     name = ''.join(preprocessor_tokens[-1].span)
 
-    preprocessor_type = PreprocessorType.UNKNOWN
-
     if name == 'include':
-        scan_for_preprocessor_include(preprocessor_tokens, it)
-        preprocessor_type = PreprocessorType.INCLUDE
-    scan_for_line_end(preprocessor_tokens, it)
+        preprocessor_token = scan_for_preprocessor_include(start, it, preprocessor_tokens)
+    else:
+        scan_for_line_end(it, preprocessor_tokens)
+        preprocessor_token = PreprocessorToken(start, it, preprocessor_tokens)
 
-    tokens.append(PreprocessorToken(start, it, preprocessor_type, preprocessor_tokens))
+    tokens.append(preprocessor_token)
     return True

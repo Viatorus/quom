@@ -1,20 +1,12 @@
-from enum import Enum
 from typing import List
 
-from .token import Token, TokenType
+from .token import Token
 from .iterator import LineWrapIterator
-
-
-class NumberType(Enum):
-    DECIMAL = 0,
-    OCTAL = 1
-    HEX = 2
-    BINARY = 3
 
 
 class NumberToken(Token):
     def __init__(self, start, end):
-        super().__init__(start, end, TokenType.NUMBER)
+        super().__init__(start, end)
 
 
 def scan_for_number(tokens: List[Token], it: LineWrapIterator):

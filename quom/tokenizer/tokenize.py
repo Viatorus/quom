@@ -6,14 +6,14 @@ from .iterator import LineWrapIterator
 from .number_tokenizer import scan_for_number
 from .preprocessor_tokenizer import scan_for_preprocessor
 from .quote_tokenizer import scan_for_quote
-from .token import Token, TokenType
+from .token import Token
 from .whitespace_tokenizer import scan_for_whitespace
 
 
 def tokenize(src) -> List[Token]:
     it = LineWrapIterator(src)
 
-    tokens = [Token(None, None, TokenType.START)]
+    tokens = [Token(None, None)]
 
     while it.curr != '\0':
         succeeded = scan_for_whitespace(tokens, it)
@@ -28,6 +28,6 @@ def tokenize(src) -> List[Token]:
         if not succeeded:
             scan_for_remaining(tokens, it)
 
-    tokens.append(Token(None, None, TokenType.END))
+    tokens.append(Token(None, None))
 
     return tokens

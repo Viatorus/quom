@@ -1,12 +1,12 @@
 from typing import List
 
-from .token import Token, TokenType
+from .token import Token
 from .iterator import LineWrapIterator
 
 
 class RemainingToken(Token):
     def __init__(self, start, end):
-        super().__init__(start, end, TokenType.REMAINING)
+        super().__init__(start, end)
 
 
 def scan_for_remaining(tokens: List[Token], it: LineWrapIterator):
