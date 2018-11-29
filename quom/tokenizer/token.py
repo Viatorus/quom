@@ -6,4 +6,4 @@ class Token:
         self.span = Span(start, end) if start and end else None
 
     def __str__(self):
-        return ''.join(self.span)
+        return str(self.span)

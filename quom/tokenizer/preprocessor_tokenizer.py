@@ -1,7 +1,7 @@
 from typing import List
 
 from .comment_tokenizer import scan_for_comment
-from .iterator import LineWrapIterator
+from .iterator import LineWrapIterator, Span
 from .number_tokenizer import scan_for_number
 from .quote_tokenizer import scan_for_quote
 from .remaining_tokenizer import scan_for_remaining
@@ -17,8 +17,9 @@ class PreprocessorToken(Token):
 
 
 class PreprocessorIncludeToken(PreprocessorToken):
-    def __init__(self, start, end, tokens: List[Token]):
+    def __init__(self, start, end, tokens: List[Token], path_start, path_end):
         super().__init__(start, end, tokens)
+        self.path = Span(path_start, path_end)
 
 
 class PreprocessorPragmaToken(PreprocessorToken):
@@ -71,6 +72,9 @@ def scan_for_preprocessor_include(start: LineWrapIterator, it: LineWrapIterator,
     it = LineWrapIterator(it)
 
     if it.curr == '"':
+        it.next()
+        path_start = it.copy()
+
         # Parse until non escaped ".
         backslashes = 0
         while it.next() and it.curr != '\n' and (it.curr != '"' or backslashes % 2 != 0):
@@ -82,9 +86,13 @@ def scan_for_preprocessor_include(start: LineWrapIterator, it: LineWrapIterator,
         # Check if end of line is reached.
         if it.curr != '"':
             raise TokenizeError("Character sequence not terminated!", it)
+        path_end = it.copy()
         it.next()
 
     elif it.curr == '<':
+        it.next()
+        path_start = it.copy()
+
         # Scan until terminating >.
         while it.next() and it.curr != '\n' and it.curr != '>':
             pass
@@ -92,10 +100,11 @@ def scan_for_preprocessor_include(start: LineWrapIterator, it: LineWrapIterator,
         # Check if end of line is reached.
         if it.curr != '>':
             raise TokenizeError("Character sequence not terminated!", it)
+        path_end = it.copy()
         it.next()
 
     scan_for_line_end(it, tokens)
-    return PreprocessorIncludeToken(start, it, tokens)
+    return PreprocessorIncludeToken(start, it, tokens, path_start, path_end)
 
 
 def scan_for_preprocessor_pragma(start: LineWrapIterator, it: LineWrapIterator, tokens: List[Token]):

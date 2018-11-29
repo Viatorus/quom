@@ -351,12 +351,15 @@ def test_preprocessor():
     tokens = tokenize('#include "abc" ')
     check_tokens(tokens, [PreprocessorToken])
     check_tokens(tokens, [PreprocessorIncludeToken])
+    assert str(tokens[1].path) == 'abc'
 
     tokens = tokenize('#include "abc\\"" ')
     check_tokens(tokens, [PreprocessorToken])
+    assert str(tokens[1].path) == 'abc\\"'
 
     tokens = tokenize('#include /*123*/ <abc> ')
     check_tokens(tokens, [PreprocessorToken])
+    assert str(tokens[1].path) == 'abc'
 
     with pytest.raises(TokenizeError):
         tokenize('#include "abc\\" ')
