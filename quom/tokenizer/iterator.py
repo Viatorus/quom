@@ -1,7 +1,4 @@
-import copy
 from typing import Union
-
-from .tokenize_error import TokenizeError
 
 
 class Iterator:
@@ -30,6 +27,9 @@ class Span:
         tmp = self.it.curr
         self.it.next()
         return tmp
+
+    def __str__(self):
+        return ''.join(self)
 
 
 class Iterable:

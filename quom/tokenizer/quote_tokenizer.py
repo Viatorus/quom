@@ -7,13 +7,11 @@ from .tokenize_error import TokenizeError
 
 
 class QuoteToken(Token):
-    def __init__(self, start, end):
-        super().__init__(start, end)
+    pass
 
 
 class SingleQuoteToken(QuoteToken):
-    def __init__(self, start, end):
-        super().__init__(start, end)
+    pass
 
 
 class DoubleQuoteToken(QuoteToken):

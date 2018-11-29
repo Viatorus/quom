@@ -6,18 +6,15 @@ from .tokenize_error import TokenizeError
 
 
 class CommentToken(Token):
-    def __init__(self, start, end):
-        super().__init__(start, end)
+    pass
 
 
 class CppCommentToken(CommentToken):
-    def __init__(self, start, end):
-        super().__init__(start, end)
+    pass
 
 
 class CCommentToken(CommentToken):
-    def __init__(self, start, end):
-        super().__init__(start, end)
+    pass
 
 
 def scan_for_comment_cpp_style(tokens: List[Token], it: LineWrapIterator):

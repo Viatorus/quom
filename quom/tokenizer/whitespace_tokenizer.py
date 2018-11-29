@@ -5,18 +5,15 @@ from .token import Token
 
 
 class WhitespaceToken(Token):
-    def __init__(self, start, end):
-        super().__init__(start, end)
+    pass
 
 
 class WhitespaceWhitespaceToken(WhitespaceToken):
-    def __init__(self, start, end):
-        super().__init__(start, end)
+    pass
 
 
 class LinebreakWhitespaceToken(WhitespaceToken):
-    def __init__(self, start, end, ):
-        super().__init__(start, end)
+    pass
 
 
 WHITESPACE_CHARACTERS = ' \t\v\f'
