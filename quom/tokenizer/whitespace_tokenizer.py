@@ -1,20 +1,22 @@
-from enum import Enum
 from typing import List
 
 from .iterator import LineWrapIterator
-from .token import Token, TokenType
-
-
-class WhitespaceType(Enum):
-    SPACE = 0
-    LINE_BREAK = 1
-    WRAPPED = 2
+from .token import Token
 
 
 class WhitespaceToken(Token):
-    def __init__(self, start, end, whitespace_type: WhitespaceType):
-        super().__init__(start, end, TokenType.WHITESPACE)
-        self.whitespace_type = whitespace_type
+    def __init__(self, start, end):
+        super().__init__(start, end)
+
+
+class WhitespaceWhitespaceToken(WhitespaceToken):
+    def __init__(self, start, end):
+        super().__init__(start, end)
+
+
+class LinebreakWhitespaceToken(WhitespaceToken):
+    def __init__(self, start, end, ):
+        super().__init__(start, end)
 
 
 WHITESPACE_CHARACTERS = ' \t\v\f'
@@ -26,7 +28,7 @@ def scan_for_whitespace(tokens: List[Token], it: LineWrapIterator):
         while it.next() and it.curr in WHITESPACE_CHARACTERS:
             pass
 
-        tokens.append(WhitespaceToken(start, it, WhitespaceType.SPACE))
+        tokens.append(WhitespaceWhitespaceToken(start, it))
         return True
     elif it.curr in '\n\r':
         start = it.copy()
@@ -35,6 +37,6 @@ def scan_for_whitespace(tokens: List[Token], it: LineWrapIterator):
         if it.prev == '\r' and it.curr == '\n':
             it.next()
 
-        tokens.append(WhitespaceToken(start, it, WhitespaceType.LINE_BREAK))
+        tokens.append(LinebreakWhitespaceToken(start, it))
         return True
     return False

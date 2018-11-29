@@ -1,25 +1,29 @@
-from enum import Enum
 from typing import List
 
 from .iterator import RawIterator, LineWrapIterator
-from .token import Token, TokenType
+from .remaining_tokenizer import RemainingToken
+from .token import Token
 from .tokenize_error import TokenizeError
 
 
-class QuoteType(Enum):
-    SINGLE = 0
-    Double = 1
-
-
 class QuoteToken(Token):
-    def __init__(self, start, end, quote_type: QuoteType, raw_encdoing):
-        super().__init__(start, end, TokenType.QUOTE)
-        self.quote_type = quote_type
-        self.raw_encoding = raw_encdoing
+    def __init__(self, start, end):
+        super().__init__(start, end)
 
 
-def is_raw_encoding(token: Token):
-    if token.token_type == TokenType.REMAINING:
+class SingleQuoteToken(QuoteToken):
+    def __init__(self, start, end):
+        super().__init__(start, end)
+
+
+class DoubleQuoteToken(QuoteToken):
+    def __init__(self, start, end, is_raw_encdoing):
+        super().__init__(start, end)
+        self.is_raw_encoding = is_raw_encdoing
+
+
+def check_is_raw_encoding(token: Token):
+    if isinstance(token, RemainingToken):
         return str(token) in ['R', 'u8R', 'LR', 'uR', 'UR']
     return False
 
@@ -42,7 +46,7 @@ def scan_for_quote_single(tokens: List[Token], it: LineWrapIterator):
         raise TokenizeError("Character sequence not terminated!", it)
     it.next()
 
-    tokens.append(QuoteToken(start, it, QuoteType.SINGLE, False))
+    tokens.append(SingleQuoteToken(start, it))
     return True
 
 
@@ -51,8 +55,8 @@ def scan_for_quote_double(tokens: List[Token], it: LineWrapIterator):
         return None
     start = it.copy()
 
-    raw_encoding = is_raw_encoding(tokens[-1])
-    if not raw_encoding:
+    is_raw_encoding = check_is_raw_encoding(tokens[-1])
+    if not is_raw_encoding:
         # Parse until end of line or non escaped ".
         backslashes = 0
         while it.next() and (it.curr != '"' or backslashes % 2 != 0):
@@ -91,7 +95,7 @@ def scan_for_quote_double(tokens: List[Token], it: LineWrapIterator):
             raise TokenizeError('No terminating delimiter inside raw string literal found!', it)
         it.next()
 
-    tokens.append(QuoteToken(start, it, QuoteType.Double, raw_encoding))
+    tokens.append(DoubleQuoteToken(start, it, is_raw_encoding))
     return True
 
 
