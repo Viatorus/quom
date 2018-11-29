@@ -5,7 +5,7 @@ import pytest
 from quom.tokenizer import tokenize, TokenizeError, Token
 from quom.tokenizer import CommentToken, CppCommentToken, CCommentToken, NumberToken, PreprocessorToken, \
     PreprocessorIncludeToken, QuoteToken, SingleQuoteToken, DoubleQuoteToken, RemainingToken, WhitespaceToken, \
-    WhitespaceWhitespaceToken, LinebreakWhitespaceToken
+    WhitespaceWhitespaceToken, LinebreakWhitespaceToken, PreprocessorPragmaToken, PreprocessorPragmaOnceToken
 
 
 def check_tokens(tokens: List[Token], res):
@@ -367,6 +367,16 @@ def test_preprocessor():
 
     with pytest.raises(TokenizeError):
         tokenize('#include ')
+
+    tokens = tokenize("#pragma once")
+    check_tokens(tokens, [PreprocessorPragmaOnceToken])
+    check_tokens(tokens, [PreprocessorPragmaToken])
+
+    tokens = tokenize("#pragma /*abc*/ once /*def*/")
+    check_tokens(tokens, [PreprocessorPragmaToken])
+
+    tokens = tokenize("#pragma once abc")
+    check_tokens(tokens, [PreprocessorPragmaToken])
 
 
 def test_remaining():

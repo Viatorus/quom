@@ -5,8 +5,7 @@ from .iterator import LineWrapIterator
 
 
 class RemainingToken(Token):
-    def __init__(self, start, end):
-        super().__init__(start, end)
+    pass
 
 
 def scan_for_remaining(tokens: List[Token], it: LineWrapIterator):

@@ -21,6 +21,14 @@ class PreprocessorIncludeToken(PreprocessorToken):
         super().__init__(start, end, tokens)
 
 
+class PreprocessorPragmaToken(PreprocessorToken):
+    pass
+
+
+class PreprocessorPragmaOnceToken(PreprocessorPragmaToken):
+    pass
+
+
 def scan_for_whitespaces_and_comments(it: LineWrapIterator, tokens: List[Token]):
     while it.curr != '\0':
         if scan_for_comment(tokens, it):
@@ -78,6 +86,20 @@ def scan_for_preprocessor_include(start: LineWrapIterator, it: LineWrapIterator,
     return PreprocessorIncludeToken(start, it, tokens)
 
 
+def scan_for_preprocessor_pragma(start: LineWrapIterator, it: LineWrapIterator, tokens: List[Token]):
+    if scan_for_whitespaces_and_comments(it, tokens):
+        return PreprocessorPragmaToken(start, it, tokens)
+
+    for c in 'once':
+        if it.curr != c:
+            return PreprocessorPragmaToken(start, it, tokens)
+        it.next()
+
+    if scan_for_whitespaces_and_comments(it, tokens):
+        return PreprocessorPragmaOnceToken(start, it, tokens)
+    return PreprocessorPragmaToken(start, it, tokens)
+
+
 def scan_for_preprocessor(tokens: List[Token], it: LineWrapIterator):
     if it.curr != '#':
         return None
@@ -94,6 +116,8 @@ def scan_for_preprocessor(tokens: List[Token], it: LineWrapIterator):
 
     if name == 'include':
         preprocessor_token = scan_for_preprocessor_include(start, it, preprocessor_tokens)
+    elif name == 'pragma':
+        preprocessor_token = scan_for_preprocessor_pragma(start, it, preprocessor_tokens)
     else:
         scan_for_line_end(it, preprocessor_tokens)
         preprocessor_token = PreprocessorToken(start, it, preprocessor_tokens)
