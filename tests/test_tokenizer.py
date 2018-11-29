@@ -5,7 +5,8 @@ import pytest
 from quom.tokenizer import tokenize, TokenizeError, Token
 from quom.tokenizer import CommentToken, CppCommentToken, CCommentToken, NumberToken, PreprocessorToken, \
     PreprocessorIncludeToken, QuoteToken, SingleQuoteToken, DoubleQuoteToken, RemainingToken, WhitespaceToken, \
-    WhitespaceWhitespaceToken, LinebreakWhitespaceToken, PreprocessorPragmaToken, PreprocessorPragmaOnceToken
+    WhitespaceWhitespaceToken, LinebreakWhitespaceToken, PreprocessorPragmaToken, PreprocessorPragmaOnceToken, \
+    PreprocessorDefineToken, PreprocessorIfNotDefinedToken, PreprocessorEndIfToken
 
 
 def check_tokens(tokens: List[Token], res):
@@ -337,8 +338,15 @@ def test_preprocessor():
     tokens = tokenize(" #pragma")
     check_tokens(tokens, [WhitespaceWhitespaceToken, PreprocessorToken])
 
-    tokens = tokenize('#define')
-    check_tokens(tokens, [PreprocessorToken])
+    tokens = tokenize("#pragma once")
+    check_tokens(tokens, [PreprocessorPragmaOnceToken])
+    check_tokens(tokens, [PreprocessorPragmaToken])
+
+    tokens = tokenize("#pragma /*abc*/ once /*def*/")
+    check_tokens(tokens, [PreprocessorPragmaToken])
+
+    tokens = tokenize("#pragma once abc")
+    check_tokens(tokens, [PreprocessorPragmaToken])
 
     tokens = tokenize('#include "abc" ')
     check_tokens(tokens, [PreprocessorToken])
@@ -350,15 +358,6 @@ def test_preprocessor():
     tokens = tokenize('#include /*123*/ <abc> ')
     check_tokens(tokens, [PreprocessorToken])
 
-    tokens = tokenize('#define a(x) auto a##x = #x')
-    check_tokens(tokens, [PreprocessorToken])
-
-    tokens = tokenize('#define eprintf(format, ...) fprintf (stderr, format, __VA_ARGS__)')
-    check_tokens(tokens, [PreprocessorToken])
-
-    tokens = tokenize('# /* abc */ define  /* test */')
-    check_tokens(tokens, [PreprocessorToken])
-
     with pytest.raises(TokenizeError):
         tokenize('#include "abc\\" ')
 
@@ -368,15 +367,23 @@ def test_preprocessor():
     with pytest.raises(TokenizeError):
         tokenize('#include ')
 
-    tokens = tokenize("#pragma once")
-    check_tokens(tokens, [PreprocessorPragmaOnceToken])
-    check_tokens(tokens, [PreprocessorPragmaToken])
+    tokens = tokenize('#define')
+    check_tokens(tokens, [PreprocessorDefineToken])
 
-    tokens = tokenize("#pragma /*abc*/ once /*def*/")
-    check_tokens(tokens, [PreprocessorPragmaToken])
+    tokens = tokenize('#define a(x) auto a##x = #x')
+    check_tokens(tokens, [PreprocessorDefineToken])
 
-    tokens = tokenize("#pragma once abc")
-    check_tokens(tokens, [PreprocessorPragmaToken])
+    tokens = tokenize('#define eprintf(format, ...) fprintf (stderr, format, __VA_ARGS__)')
+    check_tokens(tokens, [PreprocessorDefineToken])
+
+    tokens = tokenize('# /* abc */ define  /* test */')
+    check_tokens(tokens, [PreprocessorDefineToken])
+
+    tokens = tokenize("#ifndef asd")
+    check_tokens(tokens, [PreprocessorIfNotDefinedToken])
+
+    tokens = tokenize("#endif /*asd*/")
+    check_tokens(tokens, [PreprocessorEndIfToken])
 
 
 def test_remaining():

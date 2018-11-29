@@ -29,6 +29,18 @@ class PreprocessorPragmaOnceToken(PreprocessorPragmaToken):
     pass
 
 
+class PreprocessorDefineToken(PreprocessorToken):
+    pass
+
+
+class PreprocessorIfNotDefinedToken(PreprocessorToken):
+    pass
+
+
+class PreprocessorEndIfToken(PreprocessorToken):
+    pass
+
+
 def scan_for_whitespaces_and_comments(it: LineWrapIterator, tokens: List[Token]):
     while it.curr != '\0':
         if scan_for_comment(tokens, it):
@@ -118,6 +130,15 @@ def scan_for_preprocessor(tokens: List[Token], it: LineWrapIterator):
         preprocessor_token = scan_for_preprocessor_include(start, it, preprocessor_tokens)
     elif name == 'pragma':
         preprocessor_token = scan_for_preprocessor_pragma(start, it, preprocessor_tokens)
+    elif name == 'define':
+        scan_for_line_end(it, preprocessor_tokens)
+        preprocessor_token = PreprocessorDefineToken(start, it, preprocessor_tokens)
+    elif name == 'ifndef':
+        scan_for_line_end(it, preprocessor_tokens)
+        preprocessor_token = PreprocessorIfNotDefinedToken(start, it, preprocessor_tokens)
+    elif name == 'endif':
+        scan_for_line_end(it, preprocessor_tokens)
+        preprocessor_token = PreprocessorEndIfToken(start, it, preprocessor_tokens)
     else:
         scan_for_line_end(it, preprocessor_tokens)
         preprocessor_token = PreprocessorToken(start, it, preprocessor_tokens)
