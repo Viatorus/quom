@@ -109,10 +109,9 @@ def scan_for_preprocessor_pragma(start: LineWrapIterator, it: LineWrapIterator, 
     if scan_for_whitespaces_and_comments(it, tokens):
         return PreprocessorPragmaToken(start, it, tokens)
 
-    for c in 'once':
-        if it.curr != c:
-            return PreprocessorPragmaToken(start, it, tokens)
-        it.next()
+    scan_for_remaining(tokens, it)
+    if str(tokens[-1]) != 'once':
+        return PreprocessorPragmaToken(start, it, tokens)
 
     if scan_for_whitespaces_and_comments(it, tokens):
         return PreprocessorPragmaOnceToken(start, it, tokens)
@@ -130,9 +129,8 @@ def scan_for_preprocessor(tokens: List[Token], it: LineWrapIterator):
         tokens.append(PreprocessorToken(start, it, preprocessor_tokens))
         return True
 
-    name_tokens = []
-    scan_for_remaining(name_tokens, it)
-    name = str(name_tokens[0])
+    scan_for_remaining(preprocessor_tokens, it)
+    name = str(preprocessor_tokens[-1])
 
     if name == 'include':
         preprocessor_token = scan_for_preprocessor_include(start, it, preprocessor_tokens)

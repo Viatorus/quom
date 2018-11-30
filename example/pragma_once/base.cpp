@@ -2,6 +2,7 @@
 
 #include <iostream>
 
+/* hello */
 Base::Base() {
     std::cout << "Base constructed" << std::endl;
 }

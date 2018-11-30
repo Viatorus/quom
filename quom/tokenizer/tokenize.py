@@ -1,19 +1,27 @@
 from typing import List
 
-from .remaining_tokenizer import scan_for_remaining
 from .comment_tokenizer import scan_for_comment
 from .iterator import LineWrapIterator
 from .number_tokenizer import scan_for_number
 from .preprocessor_tokenizer import scan_for_preprocessor
 from .quote_tokenizer import scan_for_quote
+from .remaining_tokenizer import scan_for_remaining
 from .token import Token
 from .whitespace_tokenizer import scan_for_whitespace
+
+
+class StartToken(Token):
+    pass
+
+
+class EndToken(Token):
+    pass
 
 
 def tokenize(src) -> List[Token]:
     it = LineWrapIterator(src)
 
-    tokens = [Token(None, None)]
+    tokens = [StartToken(it, it)]
 
     while it.curr != '\0':
         succeeded = scan_for_whitespace(tokens, it)
@@ -28,6 +36,6 @@ def tokenize(src) -> List[Token]:
         if not succeeded:
             scan_for_remaining(tokens, it)
 
-    tokens.append(Token(None, None))
+    tokens.append(EndToken(it, it))
 
     return tokens

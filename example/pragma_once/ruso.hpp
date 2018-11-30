@@ -4,6 +4,7 @@
 #define RUSH_HPP
 
 #include "abc.hpp"
+
 #include "def.hpp"
 
 void start() {

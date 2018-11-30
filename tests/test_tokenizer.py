@@ -2,11 +2,10 @@ from typing import List
 
 import pytest
 
-from quom.tokenizer import tokenize, TokenizeError, Token
 from quom.tokenizer import CommentToken, CppCommentToken, CCommentToken, NumberToken, PreprocessorToken, \
     PreprocessorIncludeToken, QuoteToken, SingleQuoteToken, DoubleQuoteToken, RemainingToken, WhitespaceToken, \
     WhitespaceWhitespaceToken, LinebreakWhitespaceToken, PreprocessorPragmaToken, PreprocessorPragmaOnceToken, \
-    PreprocessorDefineToken, PreprocessorIfNotDefinedToken, PreprocessorEndIfToken
+    PreprocessorDefineToken, PreprocessorIfNotDefinedToken, PreprocessorEndIfToken, tokenize, TokenizeError, Token
 
 
 def check_tokens(tokens: List[Token], res):
