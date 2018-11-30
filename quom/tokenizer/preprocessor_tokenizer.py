@@ -17,8 +17,9 @@ class PreprocessorToken(Token):
 
 
 class PreprocessorIncludeToken(PreprocessorToken):
-    def __init__(self, start, end, tokens: List[Token], path_start, path_end):
+    def __init__(self, start, end, tokens: List[Token], is_local_include: bool, path_start, path_end):
         super().__init__(start, end, tokens)
+        self.is_local_include = is_local_include
         self.path = Span(path_start, path_end)
 
 
@@ -70,10 +71,12 @@ def scan_for_preprocessor_include(start: LineWrapIterator, it: LineWrapIterator,
         raise TokenizeError("Expected \"FILENAME\" or <FILENAME> after include!", it)
 
     it = LineWrapIterator(it)
+    it.next()
+    path_start = it.copy()
+    is_local_include = False
 
-    if it.curr == '"':
-        it.next()
-        path_start = it.copy()
+    if it.prev == '"':
+        is_local_include = True
 
         # Parse until non escaped ".
         backslashes = 0
@@ -86,13 +89,7 @@ def scan_for_preprocessor_include(start: LineWrapIterator, it: LineWrapIterator,
         # Check if end of line is reached.
         if it.curr != '"':
             raise TokenizeError("Character sequence not terminated!", it)
-        path_end = it.copy()
-        it.next()
-
-    elif it.curr == '<':
-        it.next()
-        path_start = it.copy()
-
+    elif it.prev == '<':
         # Scan until terminating >.
         while it.next() and it.curr != '\n' and it.curr != '>':
             pass
@@ -100,11 +97,12 @@ def scan_for_preprocessor_include(start: LineWrapIterator, it: LineWrapIterator,
         # Check if end of line is reached.
         if it.curr != '>':
             raise TokenizeError("Character sequence not terminated!", it)
-        path_end = it.copy()
-        it.next()
+
+    path_end = it.copy()
+    it.next()
 
     scan_for_line_end(it, tokens)
-    return PreprocessorIncludeToken(start, it, tokens, path_start, path_end)
+    return PreprocessorIncludeToken(start, it, tokens, is_local_include, path_start, path_end)
 
 
 def scan_for_preprocessor_pragma(start: LineWrapIterator, it: LineWrapIterator, tokens: List[Token]):
@@ -133,7 +131,7 @@ def scan_for_preprocessor(tokens: List[Token], it: LineWrapIterator):
         return True
 
     scan_for_remaining(preprocessor_tokens, it)
-    name = ''.join(preprocessor_tokens[-1].span)
+    name = str(preprocessor_tokens[-1])
 
     if name == 'include':
         preprocessor_token = scan_for_preprocessor_include(start, it, preprocessor_tokens)

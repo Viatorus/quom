@@ -1,12 +1,17 @@
 from typing import List
 
-from .iterator import LineWrapIterator
+from .iterator import LineWrapIterator, Span
 from .token import Token
 from .tokenize_error import TokenizeError
 
 
 class CommentToken(Token):
-    pass
+    @property
+    def content(self):
+        content_start = self.start.copy()
+        content_start.next()
+        content_start.next()
+        return Span(content_start, self.end)
 
 
 class CppCommentToken(CommentToken):
