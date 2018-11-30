@@ -130,8 +130,9 @@ def scan_for_preprocessor(tokens: List[Token], it: LineWrapIterator):
         tokens.append(PreprocessorToken(start, it, preprocessor_tokens))
         return True
 
-    scan_for_remaining(preprocessor_tokens, it)
-    name = str(preprocessor_tokens[-1])
+    name_tokens = []
+    scan_for_remaining(name_tokens, it)
+    name = str(name_tokens[0])
 
     if name == 'include':
         preprocessor_token = scan_for_preprocessor_include(start, it, preprocessor_tokens)
