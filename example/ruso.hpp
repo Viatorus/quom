@@ -11,7 +11,7 @@ public:
     Abc();
 };
 
-#define
+#define none
 
 class Def : Base {
 public:
@@ -39,14 +39,14 @@ Abc::Abc() {
 
 void call();
 
+Def::Def() {
+	call();
+}
+
 #include <iostream>
 
 void call() {
     std::cout << "called" << std::endl;
-}
-
-Def::Def() {
-	call();
 }
 
 #endif /* RUSO_MAIN */

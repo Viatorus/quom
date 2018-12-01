@@ -11,4 +11,4 @@ public:
 };
 
 #endif /* RUSU_ABC_HPP */
-#define
+#define none

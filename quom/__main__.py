@@ -1,5 +1,6 @@
 import argparse
 import sys
+import warnings
 from pathlib import Path
 
 from .quom import Quom
@@ -14,11 +15,14 @@ def main():
                         help='Format of the comment where the compilation units should be placed. \
                         Default: %(default)s')
     parser.add_argument('--include_guard', '-i', metavar='format', type=str, default=None,
-                        help='Format of the include guard. Default: %(default)s')
+                        help='Regex format of the include guard. Default: %(default)s')
     parser.add_argument('--trim', '-t', action='store_true', default=True,
                         help='Reduce continuous line breaks to one. Default: %(default)s')
 
     args = parser.parse_args()
+
+    # Cause all warnings to always be triggered.
+    warnings.simplefilter("always")
 
     with args.output_path.open('w+') as file:
         Quom(args.input_path, file, args.stitch, args.include_guard, args.trim)

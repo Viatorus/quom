@@ -1,32 +1,48 @@
 import re
-import shutil
-from io import StringIO
+import warnings
 from pathlib import Path
-from typing import TextIO
+from queue import Queue
+from typing import TextIO, Union, List
 
 from .tokenizer import tokenize, Token, CommentToken, PreprocessorToken, PreprocessorIfNotDefinedToken, \
     PreprocessorDefineToken, PreprocessorEndIfToken, PreprocessorIncludeToken, PreprocessorPragmaOnceToken, \
-    RemainingToken, LinebreakWhitespaceToken, StartToken, EndToken
+    RemainingToken, LinebreakWhitespaceToken, StartToken, EndToken, WhitespaceToken
 
 CONTINUOUS_LINE_BREAK_START = 0
 CONTINUOUS_BREAK_REACHED = 3
 
 
+def find_token(tokens: List[Token], token_type: any):
+    for i, token in enumerate(tokens):
+        if isinstance(token, token_type):
+            return i, token
+    return None, None
+
+
+def contains_only_whitespace_and_comment_tokens(tokens: List[Token]):
+    for token in tokens:
+        if not isinstance(token, (WhitespaceToken, CommentToken)):
+            return False
+    return True
+
+
 class Quom:
-    def __init__(self, src_file_path: Path, dst: TextIO, stitch_format: str, include_guards_format: str, trim: bool):
+    def __init__(self, src_file_path: Path, dst: TextIO, stitch_format: str, include_guard_format: str, trim: bool):
         self.__dst = dst
-        self.__dst_units = StringIO()
         self.__stitch_format = stitch_format
-        self.__include_guards_format = re.compile(include_guards_format) if include_guards_format else None
+        self.__include_guard_format = re.compile('^{}$'.format(include_guard_format)) if include_guard_format else None
         self.__trim = trim
+
         self.__processed_files = set()
-
+        self.__source_files = Queue()
         self.__cont_lb = CONTINUOUS_BREAK_REACHED
-        self.__cont_lb_units = CONTINUOUS_BREAK_REACHED
 
-        self.__process_file(src_file_path, False)
+        self.__process_file(src_file_path.absolute(), False)
 
-    def __process_file(self, file_path: Path, is_compilation_unit: bool):
+        if not self.__source_files.empty():
+            warnings.warn("Not all source files were stitched!", Warning)
+
+    def __process_file(self, file_path: Path, is_source_file: bool):
         # Skip already processed files.
         if file_path in self.__processed_files:
             return
@@ -37,89 +53,93 @@ class Quom:
 
         for token in tokens:
             # Find local includes.
-            if isinstance(token, PreprocessorIncludeToken) and token.is_local_include:
-                self.__process_file(file_path.parent / str(token.path), is_compilation_unit)
-                # Write includes line break token if any.
-                token = token.preprocessor_tokens[-1]
-                if isinstance(token, LinebreakWhitespaceToken):
-                    self.__write(token, is_compilation_unit)
-            else:
-                self.__write(token, is_compilation_unit)
+            token = self.__scan_for_include(file_path, token, is_source_file)
+            if not token or self.__scan_for_source_files_stitch(token):
+                continue
 
-        unit_file_path = self.__get_compilation_unit(file_path)
-        if unit_file_path:
-            self.__process_file(unit_file_path, True)
+            self.__write_token(token)
 
-    def __write(self, token: Token, is_compilation_unit: bool):
-        dst = self.__dst if not is_compilation_unit else self.__dst_units
+        self.__find_possible_source_file(file_path)
 
+    def __write_token(self, token: Token):
         if isinstance(token, StartToken) or isinstance(token, EndToken):
             return
 
-        if self.__is_pragma_once_or_include_guard(token):
+        if self.__is_pragma_once(token) or self.__is_include_guard(token):
             token = token.preprocessor_tokens[-1]
             if not isinstance(token, LinebreakWhitespaceToken):
                 return
 
-        # Write compilation units on stitch position.
-        if isinstance(token, CommentToken) and str(token.content).strip() == self.__stitch_format:
-            self.__dst_units.seek(0)
-            shutil.copyfileobj(self.__dst_units, self.__dst, - 1)
-            self.__dst_units = StringIO()
-            self.__cont_lb = CONTINUOUS_LINE_BREAK_START
-            self.__cont_lb_units = CONTINUOUS_BREAK_REACHED
-            return
-
-        if self.__trim and self.__continuous_line_break_reached(token, is_compilation_unit):
+        if self.__is_cont_line_break(token):
             return
 
         # Write token.
-        dst.write(str(token.raw))
+        self.__dst.write(str(token.raw))
 
-    def __is_pragma_once_or_include_guard(self, token: Token):
-        if isinstance(token, PreprocessorToken):
-            if isinstance(token, PreprocessorPragmaOnceToken):
-                return True
-            if self.__include_guards_format is None:
-                return False
-            if isinstance(token, (PreprocessorIfNotDefinedToken, PreprocessorDefineToken)):
-                # Find first remaining token matching the include guard format.
-                remaining_token = next(
-                    (subtoken for subtoken in token.preprocessor_tokens[1:] if isinstance(subtoken, RemainingToken)),
-                    None)
-                if remaining_token and self.__include_guards_format.match(str(remaining_token).strip()):
-                    return True
-            if isinstance(token, PreprocessorEndIfToken):
-                # Find first comment token matching the include guard format.
-                comment_token = next(
-                    (subtoken for subtoken in token.preprocessor_tokens[1:] if isinstance(subtoken, CommentToken)),
-                    None)
-                if comment_token and self.__include_guards_format.match(str(comment_token.content).strip()):
-                    return True
+    def __is_pragma_once(self, token: Token):
+        if isinstance(token, PreprocessorPragmaOnceToken):
+            return True
         return False
 
-    def __get_compilation_unit(self, header_file_path: Path):
+    def __is_include_guard(self, token: Token):
+        if self.__include_guard_format is None:
+            return False
+
+        if isinstance(token, (PreprocessorIfNotDefinedToken, PreprocessorDefineToken)):
+            # Find first remaining token matching the include guard format.
+            i, remaining_token = find_token(token.preprocessor_tokens[1:], RemainingToken)
+            if remaining_token and self.__include_guard_format.match(str(remaining_token).strip()) and \
+                    contains_only_whitespace_and_comment_tokens(token.preprocessor_tokens[i + 2:]):
+                return True
+        elif isinstance(token, PreprocessorEndIfToken):
+            # Find first comment token matching the include guard format.
+            i, comment_token = find_token(token.preprocessor_tokens[1:], CommentToken)
+            if comment_token and self.__include_guard_format.match(str(comment_token.content).strip()) and \
+                    contains_only_whitespace_and_comment_tokens(token.preprocessor_tokens[i + 2:]):
+                return True
+
+    def __find_possible_source_file(self, header_file_path: Path):
+        if header_file_path.suffix in ['.c', '.cpp', '.cxx', '.cc', '.c++', '.cp', '.C']:
+            return
+
         # Checks if a equivalent compilation unit exits.
-        for extension in ['.c', '.cpp', '.cxx', '.cc', '.c++', '.cp']:
+        for extension in ['.c', '.cpp', '.cxx', '.cc', '.c++', '.cp', '.C']:
             file_path = header_file_path.with_suffix(extension)
             if file_path.exists():
-                return file_path
+                self.__source_files.put(file_path)
+                break
+
+    def __scan_for_include(self, file_path: Path, token: Token, is_source_file: bool) -> Union[Token, None]:
+        if not isinstance(token, PreprocessorIncludeToken) or not token.is_local_include:
+            return token
+
+        self.__process_file((file_path.parent / str(token.path)).absolute(), is_source_file)
+        # Take include tokens line break token if any.
+        token = token.preprocessor_tokens[-1]
+        if isinstance(token, LinebreakWhitespaceToken):
+            return token
+
         return None
 
-    def __continuous_line_break_reached(self, token: Token, is_compilation_unit: bool):
-        cont_lb = self.__cont_lb if not is_compilation_unit else self.__cont_lb_units
+    def __scan_for_source_files_stitch(self, token: Token) -> bool:
+        if not isinstance(token, CommentToken) or str(token.content).strip() != self.__stitch_format:
+            return False
+
+        while not self.__source_files.empty():
+            self.__process_file(self.__source_files.get(), True)
+
+        return True
+
+    def __is_cont_line_break(self, token: Token) -> bool:
+        if not self.__trim:
+            return False
 
         if isinstance(token, LinebreakWhitespaceToken):
-            cont_lb += 1
+            self.__cont_lb += 1
         elif isinstance(token, PreprocessorToken) and isinstance(token.preprocessor_tokens[-1],
                                                                  LinebreakWhitespaceToken):
-            cont_lb = CONTINUOUS_LINE_BREAK_START + 1
+            self.__cont_lb = CONTINUOUS_LINE_BREAK_START + 1
         else:
-            cont_lb = CONTINUOUS_LINE_BREAK_START
+            self.__cont_lb = CONTINUOUS_LINE_BREAK_START
 
-        if not is_compilation_unit:
-            self.__cont_lb = cont_lb
-        else:
-            self.__cont_lb_units = cont_lb
-
-        return cont_lb >= CONTINUOUS_BREAK_REACHED
+        return self.__cont_lb >= CONTINUOUS_BREAK_REACHED

@@ -5,11 +5,12 @@ import pytest
 from quom.tokenizer import CommentToken, CppCommentToken, CCommentToken, NumberToken, PreprocessorToken, \
     PreprocessorIncludeToken, QuoteToken, SingleQuoteToken, DoubleQuoteToken, RemainingToken, WhitespaceToken, \
     WhitespaceWhitespaceToken, LinebreakWhitespaceToken, PreprocessorPragmaToken, PreprocessorPragmaOnceToken, \
-    PreprocessorDefineToken, PreprocessorIfNotDefinedToken, PreprocessorEndIfToken, tokenize, TokenizeError, Token
+    PreprocessorDefineToken, PreprocessorIfNotDefinedToken, PreprocessorEndIfToken, tokenize, TokenizeError, Token, \
+    StartToken, EndToken
 
 
 def check_tokens(tokens: List[Token], res):
-    res = [Token] + res + [Token]
+    res = [StartToken] + res + [EndToken]
 
     for token, token_type in zip(tokens, res):
         assert isinstance(token, token_type)
@@ -20,6 +21,14 @@ def test_comments_cpp_style():
     check_tokens(tokens, [CppCommentToken])
     check_tokens(tokens, [CommentToken])
     assert str(tokens[1]) == '//abc'
+
+    tokens = tokenize('//a\n')
+    check_tokens(tokens, [CppCommentToken, WhitespaceToken])
+    assert str(tokens[1]) == '//a'
+
+    tokens = tokenize('//\n')
+    check_tokens(tokens, [CppCommentToken, WhitespaceToken])
+    assert str(tokens[1]) == '//'
 
     tokens = tokenize(' //abc\n')
     check_tokens(tokens, [WhitespaceWhitespaceToken, CppCommentToken, LinebreakWhitespaceToken])

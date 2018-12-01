@@ -115,6 +115,8 @@ def scan_for_preprocessor_pragma(start: LineWrapIterator, it: LineWrapIterator, 
 
     if scan_for_whitespaces_and_comments(it, tokens):
         return PreprocessorPragmaOnceToken(start, it, tokens)
+
+    scan_for_line_end(it, tokens)
     return PreprocessorPragmaToken(start, it, tokens)
 
 
