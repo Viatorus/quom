@@ -21,7 +21,7 @@ def find_token(tokens: List[Token], token_type: any):
 
 def contains_only_whitespace_and_comment_tokens(tokens: List[Token]):
     for token in tokens:
-        if not isinstance(token, (WhitespaceToken, CommentToken)):
+        if not isinstance(token, (WhitespaceToken, CommentToken, EndToken)):
             return False
     return True
 
@@ -66,7 +66,7 @@ class Quom:
             return
 
         if self.__is_pragma_once(token) or self.__is_include_guard(token):
-            token = token.preprocessor_tokens[-1]
+            token = token.preprocessor_tokens[-2]
             if not isinstance(token, LinebreakWhitespaceToken):
                 return
 
@@ -87,15 +87,15 @@ class Quom:
 
         if isinstance(token, (PreprocessorIfNotDefinedToken, PreprocessorDefineToken)):
             # Find first remaining token matching the include guard format.
-            i, remaining_token = find_token(token.preprocessor_tokens[1:], RemainingToken)
+            i, remaining_token = find_token(token.preprocessor_tokens[3:], RemainingToken)
             if remaining_token and self.__include_guard_format.match(str(remaining_token).strip()) and \
-                    contains_only_whitespace_and_comment_tokens(token.preprocessor_tokens[i + 2:]):
+                    contains_only_whitespace_and_comment_tokens(token.preprocessor_tokens[i + 4:]):
                 return True
         elif isinstance(token, PreprocessorEndIfToken):
             # Find first comment token matching the include guard format.
-            i, comment_token = find_token(token.preprocessor_tokens[1:], CommentToken)
+            i, comment_token = find_token(token.preprocessor_tokens[3:], CommentToken)
             if comment_token and self.__include_guard_format.match(str(comment_token.content).strip()) and \
-                    contains_only_whitespace_and_comment_tokens(token.preprocessor_tokens[i + 2:]):
+                    contains_only_whitespace_and_comment_tokens(token.preprocessor_tokens[i + 4:]):
                 return True
 
     def __find_possible_source_file(self, header_file_path: Path):
@@ -115,7 +115,7 @@ class Quom:
 
         self.__process_file((file_path.parent / str(token.path)).absolute(), is_source_file)
         # Take include tokens line break token if any.
-        token = token.preprocessor_tokens[-1]
+        token = token.preprocessor_tokens[-2]
         if isinstance(token, LinebreakWhitespaceToken):
             return token
 
@@ -136,7 +136,7 @@ class Quom:
 
         if isinstance(token, LinebreakWhitespaceToken):
             self.__cont_lb += 1
-        elif isinstance(token, PreprocessorToken) and isinstance(token.preprocessor_tokens[-1],
+        elif isinstance(token, PreprocessorToken) and isinstance(token.preprocessor_tokens[-2],
                                                                  LinebreakWhitespaceToken):
             self.__cont_lb = CONTINUOUS_LINE_BREAK_START + 1
         else:

@@ -18,9 +18,9 @@ def check_tokens(tokens: List[Token], res):
 
 def test_comments_cpp_style():
     tokens = tokenize('//abc')
-    check_tokens(tokens, [CppCommentToken])
-    check_tokens(tokens, [CommentToken])
+    check_tokens(tokens, [(CommentToken, CppCommentToken)])
     assert str(tokens[1]) == '//abc'
+    assert str(tokens[1].content) == 'abc'
 
     tokens = tokenize('//a\n')
     check_tokens(tokens, [CppCommentToken, WhitespaceToken])
@@ -40,9 +40,9 @@ def test_comments_cpp_style():
 
 def test_comments_c_style():
     tokens = tokenize('/*ab*/')
-    check_tokens(tokens, [CCommentToken])
-    check_tokens(tokens, [CommentToken])
+    check_tokens(tokens, [(CommentToken, CCommentToken)])
     assert str(tokens[1]) == '/*ab*/'
+    assert str(tokens[1].content) == 'ab'
 
     tokens = tokenize(' /*ab*/ ')
     check_tokens(tokens, [WhitespaceWhitespaceToken, CCommentToken, WhitespaceWhitespaceToken])
@@ -85,11 +85,10 @@ def test_whitespace():
     check_tokens(tokens, [WhitespaceWhitespaceToken])
 
     tokens = tokenize('\r')
-    check_tokens(tokens, [LinebreakWhitespaceToken])
-    check_tokens(tokens, [WhitespaceToken])
+    check_tokens(tokens, [(WhitespaceToken, LinebreakWhitespaceToken)])
 
     tokens = tokenize('\n')
-    check_tokens(tokens, [LinebreakWhitespaceToken])
+    check_tokens(tokens, [(WhitespaceToken, LinebreakWhitespaceToken)])
 
     tokens = tokenize('\r\n')
     check_tokens(tokens, [LinebreakWhitespaceToken])
@@ -135,8 +134,7 @@ def test_quote_single():
 
 def test_quote_double():
     tokens = tokenize('"abc"')
-    check_tokens(tokens, [DoubleQuoteToken])
-    check_tokens(tokens, [QuoteToken])
+    check_tokens(tokens, [(QuoteToken, DoubleQuoteToken)])
     assert str(tokens[1]) == '"abc"'
 
     tokens = tokenize(' "abc" ')
@@ -347,8 +345,7 @@ def test_preprocessor():
     check_tokens(tokens, [WhitespaceWhitespaceToken, PreprocessorToken])
 
     tokens = tokenize("#pragma once")
-    check_tokens(tokens, [PreprocessorPragmaOnceToken])
-    check_tokens(tokens, [PreprocessorPragmaToken])
+    check_tokens(tokens, [(PreprocessorPragmaToken, PreprocessorPragmaOnceToken)])
 
     tokens = tokenize("#pragma /*abc*/ once /*def*/")
     check_tokens(tokens, [PreprocessorPragmaToken])
@@ -357,8 +354,7 @@ def test_preprocessor():
     check_tokens(tokens, [PreprocessorPragmaToken])
 
     tokens = tokenize('#include "abc" ')
-    check_tokens(tokens, [PreprocessorToken])
-    check_tokens(tokens, [PreprocessorIncludeToken])
+    check_tokens(tokens, [(PreprocessorToken, PreprocessorIncludeToken)])
     assert str(tokens[1].path) == 'abc'
 
     tokens = tokenize('#include "abc\\"" ')
@@ -383,6 +379,15 @@ def test_preprocessor():
 
     tokens = tokenize('#define a(x) auto a##x = #x')
     check_tokens(tokens, [PreprocessorDefineToken])
+    check_tokens(tokens[1].preprocessor_tokens,
+                 [RemainingToken, RemainingToken, WhitespaceWhitespaceToken, RemainingToken, WhitespaceWhitespaceToken,
+                  RemainingToken, WhitespaceWhitespaceToken, RemainingToken, WhitespaceWhitespaceToken, RemainingToken,
+                  WhitespaceWhitespaceToken, RemainingToken])
+
+    res = ''
+    for token in tokens[1].preprocessor_tokens:
+        res += str(token)
+    assert res == '#define a(x) auto a##x = #x'
 
     tokens = tokenize('#define eprintf(format, ...) fprintf (stderr, format, __VA_ARGS__)')
     check_tokens(tokens, [PreprocessorDefineToken])

@@ -4,8 +4,8 @@ from .comment_tokenizer import scan_for_comment
 from .iterator import LineWrapIterator, Span
 from .number_tokenizer import scan_for_number
 from .quote_tokenizer import scan_for_quote
-from .remaining_tokenizer import scan_for_remaining
-from .token import Token
+from .remaining_tokenizer import scan_for_remaining, RemainingToken
+from .token import Token, StartToken, EndToken
 from .tokenize_error import TokenizeError
 from .whitespace_tokenizer import scan_for_whitespace, LinebreakWhitespaceToken
 
@@ -126,7 +126,7 @@ def scan_for_preprocessor(tokens: List[Token], it: LineWrapIterator):
     start = it.copy()
     it.next()
 
-    preprocessor_tokens = []
+    preprocessor_tokens = [StartToken(start, start), RemainingToken(start, it)]
     if scan_for_whitespaces_and_comments(it, preprocessor_tokens):
         tokens.append(PreprocessorToken(start, it, preprocessor_tokens))
         return True
@@ -151,5 +151,6 @@ def scan_for_preprocessor(tokens: List[Token], it: LineWrapIterator):
         scan_for_line_end(it, preprocessor_tokens)
         preprocessor_token = PreprocessorToken(start, it, preprocessor_tokens)
 
+    preprocessor_tokens.append(EndToken(it, it))
     tokens.append(preprocessor_token)
     return True
