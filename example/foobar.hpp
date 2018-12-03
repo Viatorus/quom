@@ -1,3 +1,5 @@
+#pragma once
+
 #ifndef FOOBAR_HPP
 #define FOOBAR_HPP
 
