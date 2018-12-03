@@ -1,3 +1,7 @@
+![Travis](https://travis-ci.org/Viatorus/quom.svg?branch=master)
+[![PyPI](https://img.shields.io/pypi/v/quom.svg)](https://pypi.org/project/Quom/)
+
+
 # Quom
 Quom is a single header generator for C/C++ libraries.
 
