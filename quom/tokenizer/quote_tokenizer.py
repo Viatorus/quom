@@ -68,7 +68,7 @@ def scan_for_quote_double(tokens: List[Token], it: LineWrapIterator):
             raise TokenizeError("Character sequence not terminated!", it)
         it.next()
     else:
-        delimiter = ""
+        delimiter = ''
 
         # Parse until end of introductory delimiter.
         while it.next() and it.curr != '(' and it.curr:

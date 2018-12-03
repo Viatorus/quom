@@ -1,6 +1,6 @@
 # Tokenizer
 from .tokenize import tokenize
-from .token import Token
+from .token import Token, StartToken, EndToken
 from .tokenize_error import TokenizeError
 
 # Tokens

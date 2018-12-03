@@ -1,12 +1,19 @@
 from typing import List
 
-from .iterator import LineWrapIterator
+from .iterator import LineWrapIterator, Span
 from .token import Token
 from .tokenize_error import TokenizeError
 
 
 class CommentToken(Token):
-    pass
+    def __init__(self, start, end, content_start, content_end):
+        super().__init__(start, end)
+        self.content_start = content_start.copy()
+        self.content_end = content_end.copy()
+
+    @property
+    def content(self):
+        return Span(self.content_start, self.content_end)
 
 
 class CppCommentToken(CommentToken):
@@ -24,12 +31,16 @@ def scan_for_comment_cpp_style(tokens: List[Token], it: LineWrapIterator):
     it = LineWrapIterator(it)
     start = it.copy()
     it.next()
+    it.next()
+    content_start = it.copy()
 
     # Parse until line break.
-    while it.next() and it.curr not in '\n\r':
+    while it.curr not in '\n\r' and it.next():
         pass
 
-    tokens.append(CppCommentToken(start, it))
+    content_end = it.copy()
+
+    tokens.append(CppCommentToken(start, it, content_start, content_end))
     return True
 
 
@@ -40,17 +51,20 @@ def scan_for_comment_c_style(tokens: List[Token], it: LineWrapIterator):
     it = LineWrapIterator(it)
     start = it.copy()
     it.next()
+    it.next()
+    content_start = it.copy()
 
     # Parse until file end or */.
-    while it.next() and (it.curr != '*' or it.lookahead != '/'):
+    while (it.curr != '*' or it.lookahead != '/') and it.next():
         pass
 
     if it.curr != '*':
         raise TokenizeError("C-style comment not terminated!", it)
+    content_end = it.copy()
     it.next()
     it.next()
 
-    tokens.append(CCommentToken(start, it))
+    tokens.append(CCommentToken(start, it, content_start, content_end))
     return True
 
 
