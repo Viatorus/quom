@@ -37,16 +37,3 @@ Base::Base() {
 Abc::Abc() {
 }
 
-void call();
-
-Def::Def() {
-	call();
-}
-
-#include <iostream>
-
-void call() {
-    std::cout << "called" << std::endl;
-}
-
-#endif /* RUSO_MAIN */

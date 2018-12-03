@@ -1,9 +1,9 @@
 import re
-import warnings
 from pathlib import Path
 from queue import Queue
 from typing import TextIO, Union, List
 
+from .quom_error import QuomError
 from .tokenizer import tokenize, Token, CommentToken, PreprocessorToken, PreprocessorIfNotDefinedToken, \
     PreprocessorDefineToken, PreprocessorEndIfToken, PreprocessorIncludeToken, PreprocessorPragmaOnceToken, \
     RemainingToken, LinebreakWhitespaceToken, StartToken, EndToken, WhitespaceToken
@@ -40,7 +40,7 @@ class Quom:
         self.__process_file(src_file_path.absolute(), False)
 
         if not self.__source_files.empty():
-            warnings.warn("Not all source files were stitched!", Warning)
+            raise QuomError('Not all source files were stitched!')
 
     def __process_file(self, file_path: Path, is_source_file: bool):
         # Skip already processed files.
@@ -48,8 +48,11 @@ class Quom:
             return
         self.__processed_files.add(file_path)
 
-        with file_path.open() as file:
-            tokens = tokenize(file.read())
+        try:
+            with file_path.open() as file:
+                tokens = tokenize(file.read())
+        except FileNotFoundError:
+            raise QuomError('File not found: \'{}\''.format(file_path))
 
         for token in tokens:
             # Find local includes.
@@ -113,7 +116,7 @@ class Quom:
         if not isinstance(token, PreprocessorIncludeToken) or not token.is_local_include:
             return token
 
-        self.__process_file((file_path.parent / str(token.path)).absolute(), is_source_file)
+        self.__process_file(file_path.parent / str(token.path), is_source_file)
         # Take include tokens line break token if any.
         token = token.preprocessor_tokens[-2]
         if isinstance(token, LinebreakWhitespaceToken):

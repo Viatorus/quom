@@ -1,6 +1,5 @@
 import argparse
 import sys
-import warnings
 from pathlib import Path
 
 from .quom import Quom
@@ -21,11 +20,12 @@ def main():
 
     args = parser.parse_args()
 
-    # Cause all warnings to always be triggered.
-    warnings.simplefilter("always")
-
-    with args.output_path.open('w+') as file:
-        Quom(args.input_path, file, args.stitch, args.include_guard, args.trim)
+    try:
+        with args.output_path.open('w+') as file:
+            Quom(args.input_path, file, args.stitch, args.include_guard, args.trim)
+    except Exception as e:
+        print('Error: {}'.format(e), file=sys.stderr)
+        return 1
 
 
 if __name__ == '__main__':
