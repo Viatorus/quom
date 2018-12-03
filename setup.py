@@ -10,7 +10,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='Quom',
-    version='0.1.0',
+    version='0.3.0',
     url='https://github.com/Viatorus/quom',
     license='MIT',
 
@@ -19,6 +19,7 @@ setup(
 
     description='Quom is a single header generator for C/C++ libraries.',
     long_description=long_description,
+    long_description_content_type='text/markdown',
 
     packages=find_packages(exclude=('tests',)),
 
