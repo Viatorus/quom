@@ -337,6 +337,8 @@ def test_preprocessor():
 
     tokens = tokenize("# /**/\n")
     check_tokens(tokens, [PreprocessorToken])
+    check_tokens(tokens[1].preprocessor_tokens,
+                 [RemainingToken, WhitespaceWhitespaceToken, CCommentToken, LinebreakWhitespaceToken])
 
     tokens = tokenize("#pragma")
     check_tokens(tokens, [PreprocessorToken])
@@ -400,6 +402,12 @@ def test_preprocessor():
 
     tokens = tokenize("#endif /*asd*/")
     check_tokens(tokens, [PreprocessorEndIfToken])
+    assert len(tokens[1].preprocessor_instruction) == 2
+    assert isinstance(tokens[1].preprocessor_instruction[0], RemainingToken)
+    assert isinstance(tokens[1].preprocessor_instruction[1], RemainingToken)
+    assert len(tokens[1].preprocessor_instruction) == 2
+    assert isinstance(tokens[1].preprocessor_arguments[0], WhitespaceWhitespaceToken)
+    assert isinstance(tokens[1].preprocessor_arguments[1], CCommentToken)
 
 
 def test_remaining():

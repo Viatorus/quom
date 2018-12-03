@@ -87,15 +87,15 @@ class Quom:
 
         if isinstance(token, (PreprocessorIfNotDefinedToken, PreprocessorDefineToken)):
             # Find first remaining token matching the include guard format.
-            i, remaining_token = find_token(token.preprocessor_tokens[3:], RemainingToken)
+            i, remaining_token = find_token(token.preprocessor_arguments, RemainingToken)
             if remaining_token and self.__include_guard_format.match(str(remaining_token).strip()) and \
-                    contains_only_whitespace_and_comment_tokens(token.preprocessor_tokens[i + 4:]):
+                    contains_only_whitespace_and_comment_tokens(token.preprocessor_arguments[i + 1:]):
                 return True
         elif isinstance(token, PreprocessorEndIfToken):
             # Find first comment token matching the include guard format.
-            i, comment_token = find_token(token.preprocessor_tokens[3:], CommentToken)
+            i, comment_token = find_token(token.preprocessor_arguments, CommentToken)
             if comment_token and self.__include_guard_format.match(str(comment_token.content).strip()) and \
-                    contains_only_whitespace_and_comment_tokens(token.preprocessor_tokens[i + 4:]):
+                    contains_only_whitespace_and_comment_tokens(token.preprocessor_arguments[i + 1:]):
                 return True
 
     def __find_possible_source_file(self, header_file_path: Path):
