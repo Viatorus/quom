@@ -37,12 +37,12 @@ class Quom:
         self.__source_files = Queue()
         self.__cont_lb = CONTINUOUS_BREAK_REACHED
 
-        self.__process_file(src_file_path.absolute(), False)
+        self.__process_file(src_file_path.absolute(), False, True)
 
         if not self.__source_files.empty():
             raise QuomError('Not all source files were stitched!')
 
-    def __process_file(self, file_path: Path, is_source_file: bool):
+    def __process_file(self, file_path: Path, is_source_file: bool, is_main_header=False):
         # Skip already processed files.
         if file_path in self.__processed_files:
             return
@@ -60,15 +60,15 @@ class Quom:
             if not token or self.__scan_for_source_files_stitch(token):
                 continue
 
-            self.__write_token(token)
+            self.__write_token(token, is_main_header)
 
         self.__find_possible_source_file(file_path)
 
-    def __write_token(self, token: Token):
+    def __write_token(self, token: Token, is_main_header: bool):
         if isinstance(token, StartToken) or isinstance(token, EndToken):
             return
 
-        if self.__is_pragma_once(token) or self.__is_include_guard(token):
+        if (not is_main_header and self.__is_pragma_once(token)) or self.__is_include_guard(token):
             token = token.preprocessor_tokens[-2]
             if not isinstance(token, LinebreakWhitespaceToken):
                 return
