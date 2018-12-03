@@ -1,7 +1,7 @@
 #pragma once
 
-#ifndef /*aha*/ RUSU_DEF_HPP
-#define RUSU_DEF_HPP
+#ifndef /*aha*/ FOOBAR_BAR_HPP
+#define FOOBAR_BAR_HPP
 
 #include "base.hpp"
 
@@ -10,4 +10,4 @@ public:
     Def();
 };
 
-#endif //RUSU_DEF_HPP
+#endif //FOOBAR_BAR_HPP

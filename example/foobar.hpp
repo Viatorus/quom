@@ -1,12 +1,12 @@
-#ifndef RUSH_HPP
-#define RUSH_HPP
+#ifndef FOOBAR_HPP
+#define FOOBAR_HPP
 
 class Base {
 public:
     Base();
 };
 
-class Abc : Base {
+class Foo : Base {
 public:
     Abc();
 };
@@ -23,9 +23,9 @@ void start() {
     Def def;
 }
 
-#endif // RUSH_HPP
+#endif // FOOBAR_HPP
 
-#ifdef RUSO_MAIN
+#ifdef FOOBAR_MAIN
 
 #include <iostream>
 
@@ -37,3 +37,16 @@ Base::Base() {
 Abc::Abc() {
 }
 
+void call();
+
+Def::Def() {
+	call();
+}
+
+#include <iostream>
+
+void call() {
+    std::cout << "called" << std::endl;
+}
+
+#endif /* FOOBAR_MAIN */
