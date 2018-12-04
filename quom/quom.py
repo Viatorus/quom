@@ -27,7 +27,8 @@ def contains_only_whitespace_and_comment_tokens(tokens: List[Token]):
 
 
 class Quom:
-    def __init__(self, src_file_path: Path, dst: TextIO, stitch_format: str, include_guard_format: str, trim: bool):
+    def __init__(self, src_file_path: Path, dst: TextIO, stitch_format: str = '~> stitch <~',
+                 include_guard_format: str = None, trim: bool = True):
         self.__dst = dst
         self.__stitch_format = stitch_format
         self.__include_guard_format = re.compile('^{}$'.format(include_guard_format)) if include_guard_format else None
@@ -37,7 +38,7 @@ class Quom:
         self.__source_files = Queue()
         self.__cont_lb = CONTINUOUS_BREAK_REACHED
 
-        self.__process_file(src_file_path.absolute(), False, True)
+        self.__process_file(src_file_path, False, True)
 
         if not self.__source_files.empty():
             raise QuomError('Not all source files were stitched!')
