@@ -59,7 +59,6 @@ extern int foo;
 #include <algorithm>
 
 int foo = 42;
-
 """
 
 RESULT_NORMAL_WITHOUT_TRIM = """\
@@ -87,7 +86,6 @@ extern int foo;
 #include <algorithm>
 
 int foo = 42;
-
 """
 
 RESULT_NORMAL_WITHOUT_SOURCES = """\
@@ -106,7 +104,6 @@ extern int foo;
 #endif // FOOBAR_FOO_HPP
 
 #endif // FOOBAR_HPP
-
 """
 
 RESULT_WITH_INCLUDE_GUARD_FORMAT = """\
@@ -124,7 +121,6 @@ extern int foo;
 #include <algorithm>
 
 int foo = 42;
-
 """
 
 

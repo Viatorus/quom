@@ -37,8 +37,13 @@ class Quom:
         self.__processed_files = set()
         self.__source_files = Queue()
         self.__cont_lb = CONTINUOUS_BREAK_REACHED
+        self.__prev_token = None
 
         self.__process_file(src_file_path, False, True)
+
+        # Write last token, if not a continuous line break.
+        if self.__cont_lb == CONTINUOUS_LINE_BREAK_START or not isinstance(self.__prev_token, LinebreakWhitespaceToken):
+            self.__write_token(self.__prev_token)
 
         if not self.__source_files.empty():
             raise QuomError('Not all source files were stitched!')
@@ -77,8 +82,10 @@ class Quom:
         if self.__is_cont_line_break(token):
             return
 
-        # Write token.
-        self.__dst.write(str(token.raw))
+        # Write previous token, store current.
+        if self.__prev_token:
+            self.__dst.write(str(self.__prev_token.raw))
+        self.__prev_token = token
 
     def __is_pragma_once(self, token: Token):
         if isinstance(token, PreprocessorPragmaOnceToken):
