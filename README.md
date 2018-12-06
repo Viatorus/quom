@@ -1,3 +1,5 @@
+![logo](https://raw.githubusercontent.com/Viatorus/quom/master/artwork/logo_banner.png)
+
 ![Travis](https://travis-ci.org/Viatorus/quom.svg?branch=master)
 [![PyPI](https://img.shields.io/pypi/v/quom.svg)](https://pypi.org/project/Quom/)
 
