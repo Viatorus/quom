@@ -34,4 +34,10 @@ setup(
         'Programming Language :: Python',
         'Programming Language :: Python :: 3.6'
     ],
+
+    entry_points={
+        'console_scripts': [
+            'quom=quom.__main__:main',
+        ]
+    },
 )
