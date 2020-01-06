@@ -27,7 +27,7 @@ def contains_only_whitespace_and_comment_tokens(tokens: List[Token]):
 
 
 class Quom:
-    def __init__(self, src_file_path: Path, dst: TextIO, stitch_format: str = '~> stitch <~',
+    def __init__(self, src_file_path: Union[Path, str], dst: TextIO, stitch_format: str = '~> stitch <~',
                  include_guard_format: str = None, trim: bool = True):
         self.__dst = dst
         self.__stitch_format = stitch_format
@@ -39,7 +39,7 @@ class Quom:
         self.__cont_lb = CONTINUOUS_BREAK_REACHED
         self.__prev_token = None
 
-        self.__process_file(src_file_path, False, True)
+        self.__process_file(Path(src_file_path), False, True)
 
         # Write last token, if not a continuous line break.
         if self.__cont_lb == CONTINUOUS_LINE_BREAK_START or not isinstance(self.__prev_token, LinebreakWhitespaceToken):
