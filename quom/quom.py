@@ -43,7 +43,7 @@ class Quom:
 
         # Write last token, if not a continuous line break.
         if self.__cont_lb == CONTINUOUS_LINE_BREAK_START or not isinstance(self.__prev_token, LinebreakWhitespaceToken):
-            self.__write_token(self.__prev_token)
+            self.__write_token(self.__prev_token, True)
 
         if not self.__source_files.empty():
             raise QuomError('Not all source files were stitched!')
