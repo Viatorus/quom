@@ -141,8 +141,7 @@ def test_normal(fs):
     dst = StringIO()
     Quom(Path('main.hpp'), dst)
 
-    dst.seek(0)
-    assert dst.read() == RESULT_NORMAL
+    assert dst.getvalue() == RESULT_NORMAL
 
 
 def test_normal_without_trim(fs):
@@ -151,8 +150,7 @@ def test_normal_without_trim(fs):
     dst = StringIO()
     Quom(Path('main.hpp'), dst, trim=False)
 
-    dst.seek(0)
-    assert dst.read() == RESULT_NORMAL_WITHOUT_TRIM
+    assert dst.getvalue() == RESULT_NORMAL_WITHOUT_TRIM
 
 
 def test_with_include_guard_format(fs):
@@ -161,8 +159,7 @@ def test_with_include_guard_format(fs):
     dst = StringIO()
     Quom(Path('main.hpp'), dst, include_guard_format='FOOBAR_.+_HPP')
 
-    dst.seek(0)
-    assert dst.read() == RESULT_WITH_INCLUDE_GUARD_FORMAT
+    assert dst.getvalue() == RESULT_WITH_INCLUDE_GUARD_FORMAT
 
 
 def test_with_mismatching_include_guard_format(fs):
@@ -171,8 +168,7 @@ def test_with_mismatching_include_guard_format(fs):
     dst = StringIO()
     Quom(Path('main.hpp'), dst, include_guard_format='FOOBAR_.+_HP')
 
-    dst.seek(0)
-    assert dst.read() == RESULT_NORMAL
+    assert dst.getvalue() == RESULT_NORMAL
 
 
 def test_with_mismatching_stitch(fs):
@@ -199,5 +195,4 @@ def test_with_missing_source_file(fs):
     dst = StringIO()
     Quom(Path('main.hpp'), dst)
 
-    dst.seek(0)
-    assert dst.read() == RESULT_NORMAL_WITHOUT_SOURCES
+    assert dst.getvalue() == RESULT_NORMAL_WITHOUT_SOURCES
