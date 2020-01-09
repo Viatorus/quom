@@ -46,7 +46,7 @@ class Quom:
             self.__write_token(self.__prev_token, True)
 
         if not self.__source_files.empty():
-            raise QuomError('Not all source files were stitched!')
+            raise QuomError('Couldn\'t stitch source files. The stitch location "{}" was not found.'.format(stitch_format))
 
     def __process_file(self, file_path: Path, is_source_file: bool, is_main_header=False):
         # Skip already processed files.
