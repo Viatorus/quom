@@ -44,8 +44,6 @@ optional arguments:
   --trim, -t            Reduce continuous line breaks to one. Default: True
 ```
 
-Take a look into the [examples folder](examples/) for more.
-
 ## Simple example
 
 The project:
@@ -184,3 +182,5 @@ int foo = 42;
 
 #endif
 ```
+
+Take a look into the [examples folder](examples/) and the [test folder](tests/test_quom) for more.
