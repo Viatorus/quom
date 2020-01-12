@@ -27,7 +27,7 @@ def contains_only_whitespace_and_comment_tokens(tokens: List[Token]):
 
 
 class Quom:
-    def __init__(self, src_file_path: Union[Path, str], dst: TextIO, stitch_format: str = '~> stitch <~',
+    def __init__(self, src_file_path: Union[Path, str], dst: TextIO, stitch_format: str = None,
                  include_guard_format: str = None, trim: bool = True):
         self.__dst = dst
         self.__stitch_format = stitch_format
@@ -41,12 +41,18 @@ class Quom:
 
         self.__process_file(Path(src_file_path), False, True)
 
+        if not self.__source_files.empty():
+            if stitch_format is not None:
+                raise QuomError('Couldn\'t stitch source files. The stitch location "{}" was not found.'
+                                .format(stitch_format))
+            while not self.__source_files.empty():
+                self.__process_file(self.__source_files.get(), True)
+            # Write last token.
+            self.__write_token(self.__prev_token, True)
+
         # Write last token, if not a continuous line break.
         if self.__cont_lb == CONTINUOUS_LINE_BREAK_START or not isinstance(self.__prev_token, LinebreakWhitespaceToken):
             self.__write_token(self.__prev_token, True)
-
-        if not self.__source_files.empty():
-            raise QuomError('Couldn\'t stitch source files. The stitch location "{}" was not found.'.format(stitch_format))
 
     def __process_file(self, file_path: Path, is_source_file: bool, is_main_header=False):
         # Skip already processed files.
