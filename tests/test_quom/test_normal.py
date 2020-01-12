@@ -14,8 +14,6 @@ FILE_MAIN_HPP = """\
 #include "foo.hpp"
 
 #endif // FOOBAR_HPP
-
-// ~> stitch <~
 """
 
 FILE_FOO_HPP = """\
@@ -82,7 +80,6 @@ extern int foo;
 #endif // FOOBAR_HPP
 
 
-
 #include <algorithm>
 
 int foo = 42;
@@ -121,6 +118,49 @@ extern int foo;
 #include <algorithm>
 
 int foo = 42;
+"""
+
+FILE_MAIN_WITH_STITCH_LOCATION_HPP = """\
+#pragma once
+
+#ifndef FOOBAR_HPP
+#define FOOBAR_HPP
+
+#include "foo.hpp"
+
+#endif // FOOBAR_HPP
+
+#ifdef MAIN
+
+// ~> stitch <~
+
+#endif
+"""
+
+RESULT_WITH_STITCH_LOCATION = """\
+#pragma once
+
+#ifndef FOOBAR_HPP
+#define FOOBAR_HPP
+
+# /* */ ifndef /*123*/ FOOBAR_FOO_HPP
+#define FOOBAR_FOO_HPP // abc
+
+#include <iostream>
+
+extern int foo;
+
+#endif // FOOBAR_FOO_HPP
+
+#endif // FOOBAR_HPP
+
+#ifdef MAIN
+
+#include <algorithm>
+
+int foo = 42;
+
+#endif
 """
 
 
@@ -169,6 +209,17 @@ def test_with_mismatching_include_guard_format(fs):
     Quom(Path('main.hpp'), dst, include_guard_format='FOOBAR_.+_HP')
 
     assert dst.getvalue() == RESULT_NORMAL
+
+
+def test_with_stitch_location(fs):
+    init()
+    with open("main.hpp", "w") as file:
+        file.write(FILE_MAIN_WITH_STITCH_LOCATION_HPP)
+
+    dst = StringIO()
+    Quom(Path('main.hpp'), dst, stitch_format='~> stitch <~')
+
+    assert dst.getvalue() == RESULT_WITH_STITCH_LOCATION
 
 
 def test_with_mismatching_stitch(fs):

@@ -7,7 +7,7 @@
 # Quom
 Quom is a single header generator for C/C++ libraries.
 
-# Installation
+## Installation
 
 ```
 pip install quom
@@ -15,13 +15,14 @@ pip install quom
 
 Only **Python 3.6+** is supported.
 
-# How it works
+## How it works
 
-Quom resolves all local includes starting with the main header file of your library.
+Quom resolves all local includes starting with the main file of your library.
 
-Afterwards, it tries to find the related source files and places them at the specific stitch location.
+Afterwards, it tries to find the related source files and places them at the end of the main file
+or at a specific stitch location if provided.
 
-# How to use it 
+## How to use it
 
 ```
 usage: quom [-h] [--stitch format] [--include_guard format] [--trim]
@@ -30,14 +31,14 @@ usage: quom [-h] [--stitch format] [--include_guard format] [--trim]
 Single header generator for C/C++ libraries.
 
 positional arguments:
-  input                 Input file path of the main header file.
+  input                 Input file path of the main file.
   output                Output file path of the generated single header file.
 
 optional arguments:
   -h, --help            show this help message and exit
   --stitch format, -s format
-                        Format of the comment where the source files should be
-                        placed. Default: ~> stitch <~
+                        Format of the comment where the source files should be placed
+                        (e.g. // ~> stitch <~). Default: None (at the end of the main file)
   --include_guard format, -g format
                         Regex format of the include guard. Default: None
   --trim, -t            Reduce continuous line breaks to one. Default: True
@@ -45,7 +46,68 @@ optional arguments:
 
 Take a look into the [examples folder](examples/) for more.
 
-# Simple example
+## Simple example
+
+The project:
+
+```
+|-src/
+|  |-foo.hpp
+|  |-foo.cpp
+|   -main.cpp
+|-out/
+    -main_gen.hpp
+```
+
+*foo.hpp*
+
+```cpp
+#pragma once
+
+int foo();
+```
+
+*foo.cpp*
+
+```cpp
+#include "foo.hpp"
+
+int foo() {
+    return 0;
+}
+```
+
+*main.cpp*
+
+```cpp
+#include "foo.hpp"
+
+int main() {
+    return foo();
+}
+```
+
+The command:
+
+```
+quom src/main.hpp main_gen.hpp
+```
+
+*main_gen.hpp*
+
+```cpp
+int foo();
+
+int main() {
+    return foo();
+}
+
+int foo() {
+    return 0;
+}
+```
+
+## Advanced example
 
 The project:
 
@@ -56,7 +118,6 @@ The project:
 |   -foobar.hpp
 |-out/
     -foobar_gen.hpp
-
 ```
 
 *foo.hpp*
@@ -102,10 +163,10 @@ int foo = 42;
 The command:
 
 ```
-quom src/foobar.hpp foobar_gen.hpp -g FOOBAR_.+_HPP
+quom src/foobar.hpp foobar_gen.hpp -s "~> stitch <~" -g FOOBAR_.+_HPP
 ```
 
-The result:
+*foobar_gen.hpp*
 
 ```cpp
 #pragma once
