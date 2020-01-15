@@ -10,7 +10,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='Quom',
-    version='1.0.0',
+    version='1.1.0',
     url='https://github.com/Viatorus/quom',
     license='MIT',
 
@@ -28,7 +28,7 @@ setup(
     zip_safe=False,
 
     classifiers=[
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 5 - Production/Stable',
         'Topic :: Software Development :: Build Tools',
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python',
