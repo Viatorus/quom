@@ -32,6 +32,10 @@ class PreprocessorIncludeToken(PreprocessorToken):
         self.path = Span(path_start, path_end)
 
 
+class PreprocessorUnknownIncludeToken(PreprocessorToken):
+    pass
+
+
 class PreprocessorPragmaToken(PreprocessorToken):
     pass
 
@@ -77,7 +81,8 @@ def scan_for_line_end(it: LineWrapIterator, tokens: List[Token]):
 
 def scan_for_preprocessor_include(start: LineWrapIterator, it: LineWrapIterator, tokens: List[Token]):
     if scan_for_whitespaces_and_comments(it, tokens) or it.curr != '"' and it.curr != '<':
-        raise TokenizeError("Expected \"FILENAME\" or <FILENAME> after include!", it)
+        scan_for_line_end(it, tokens)
+        return PreprocessorUnknownIncludeToken(start, it)
 
     it = LineWrapIterator(it)
     it.next()

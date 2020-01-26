@@ -3,7 +3,7 @@ from typing import List
 import pytest
 
 from quom.tokenizer import CommentToken, CppCommentToken, CCommentToken, NumberToken, PreprocessorToken, \
-    PreprocessorIncludeToken, QuoteToken, SingleQuoteToken, DoubleQuoteToken, RemainingToken, WhitespaceToken, \
+    PreprocessorIncludeToken, PreprocessorUnknownIncludeToken, QuoteToken, SingleQuoteToken, DoubleQuoteToken, RemainingToken, WhitespaceToken, \
     WhitespaceWhitespaceToken, LinebreakWhitespaceToken, PreprocessorPragmaToken, PreprocessorPragmaOnceToken, \
     PreprocessorDefineToken, PreprocessorIfNotDefinedToken, PreprocessorEndIfToken, tokenize, TokenizeError, Token, \
     StartToken, EndToken
@@ -373,8 +373,8 @@ def test_preprocessor():
     with pytest.raises(TokenizeError):
         tokenize('#include <abc')
 
-    with pytest.raises(TokenizeError):
-        tokenize('#include ')
+    tokens = tokenize('#include ')
+    check_tokens(tokens, [PreprocessorUnknownIncludeToken])
 
     tokens = tokenize('#define')
     check_tokens(tokens, [PreprocessorDefineToken])
