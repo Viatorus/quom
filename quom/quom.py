@@ -6,7 +6,7 @@ from typing import TextIO, Union, List
 from .quom_error import QuomError
 from .tokenizer import tokenize, Token, CommentToken, PreprocessorToken, PreprocessorIfNotDefinedToken, \
     PreprocessorDefineToken, PreprocessorEndIfToken, PreprocessorIncludeToken, PreprocessorPragmaOnceToken, \
-    RemainingToken, LinebreakWhitespaceToken, StartToken, EndToken, WhitespaceToken
+    RemainingToken, LinebreakWhitespaceToken, EmptyToken, StartToken, EndToken, WhitespaceToken
 
 CONTINUOUS_LINE_BREAK_START = 0
 CONTINUOUS_BREAK_REACHED = 3
@@ -37,7 +37,7 @@ class Quom:
         self.__processed_files = set()
         self.__source_files = Queue()
         self.__cont_lb = CONTINUOUS_BREAK_REACHED
-        self.__prev_token = None
+        self.__prev_token = EmptyToken()
 
         self.__process_file(Path(src_file_path), False, True)
 
@@ -93,7 +93,8 @@ class Quom:
             self.__dst.write(str(self.__prev_token.raw))
         self.__prev_token = token
 
-    def __is_pragma_once(self, token: Token):
+    @staticmethod
+    def __is_pragma_once(token: Token):
         if isinstance(token, PreprocessorPragmaOnceToken):
             return True
         return False
