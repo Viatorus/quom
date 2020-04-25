@@ -42,6 +42,8 @@ optional arguments:
   --include_guard format, -g format
                         Regex format of the include guard. Default: None
   --trim, -t            Reduce continuous line breaks to one. Default: True
+  --include_directory INCLUDE_DIRECTORY, -I INCLUDE_DIRECTORY
+                        Add include directories for header files.
 ```
 
 ## Simple example
