@@ -49,9 +49,9 @@ class Quom:
                 self.__process_file(self.__source_files.get(), True)
             # Write last token.
             self.__write_token(self.__prev_token, True)
-
-        # Write last token, if not a continuous line break.
-        if self.__cont_lb == CONTINUOUS_LINE_BREAK_START or not isinstance(self.__prev_token, LinebreakWhitespaceToken):
+        elif self.__cont_lb == CONTINUOUS_LINE_BREAK_START or not isinstance(self.__prev_token,
+                                                                             LinebreakWhitespaceToken):
+            # Write last token, if not a continuous line break.
             self.__write_token(self.__prev_token, True)
 
     def __process_file(self, file_path: Path, is_source_file: bool, is_main_header=False):

@@ -247,13 +247,3 @@ def test_with_missing_source_file(fs):
     Quom(Path('main.hpp'), dst)
 
     assert dst.getvalue() == RESULT_NORMAL_WITHOUT_SOURCES
-
-
-def test_without_newline_at_end(fs):
-    with open('main.hpp', 'w+') as file:
-        file.write("int a;")
-
-    dst = StringIO()
-    Quom(Path('main.hpp'), dst)
-
-    assert dst.getvalue() == "int a;"
