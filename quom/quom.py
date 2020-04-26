@@ -28,25 +28,27 @@ def contains_only_whitespace_and_comment_tokens(tokens: List[Token]):
 
 class Quom:
     def __init__(self, src_file_path: Union[Path, str], dst: TextIO, stitch_format: str = None,
-                 include_guard_format: str = None, trim: bool = True):
+                 include_guard_format: str = None, trim: bool = True,
+                 include_directories: List[Union[Path, str]] = None):
         self.__dst = dst
         self.__stitch_format = stitch_format
         self.__include_guard_format = re.compile('^{}$'.format(include_guard_format)) if include_guard_format else None
         self.__trim = trim
+        self.__include_directories = [Path(x) for x in include_directories] if include_directories else []
 
         self.__processed_files = set()
         self.__source_files = Queue()
-        self.__cont_lb = CONTINUOUS_BREAK_REACHED
+        self.__cont_lb = CONTINUOUS_LINE_BREAK_START
         self.__prev_token = EmptyToken()
 
-        self.__process_file(Path(src_file_path), False, True)
+        self.__process_file(Path(), src_file_path, False, True)
 
         if not self.__source_files.empty():
             if stitch_format is not None:
                 raise QuomError('Couldn\'t stitch source files. The stitch location "{}" was not found.'
                                 .format(stitch_format))
             while not self.__source_files.empty():
-                self.__process_file(self.__source_files.get(), True)
+                self.__process_file(Path(), self.__source_files.get(), True)
             # Write last token.
             self.__write_token(self.__prev_token, True)
         elif self.__cont_lb == CONTINUOUS_LINE_BREAK_START or not isinstance(self.__prev_token,
@@ -54,17 +56,28 @@ class Quom:
             # Write last token, if not a continuous line break.
             self.__write_token(self.__prev_token, True)
 
-    def __process_file(self, file_path: Path, is_source_file: bool, is_main_header=False):
+    def __process_file(self, relative_path: Path, include_path: Path, is_source_file: bool,
+                       is_main_header=False):
+        # First check if file exists relative.
+        file_path = relative_path / include_path
+        if file_path.exists():
+            with file_path.open() as file:
+                tokens = tokenize(file.read())
+        else:
+            # Otherwise search in include directories.
+            for include_directory in self.__include_directories:
+                file_path = include_directory / include_path
+                if file_path.exists():
+                    with file_path.open() as file:
+                        tokens = tokenize(file.read())
+                    break
+            else:
+                raise QuomError('Include not found: \'{}\''.format(include_path))
+
         # Skip already processed files.
         if file_path in self.__processed_files:
             return
         self.__processed_files.add(file_path)
-
-        try:
-            with file_path.open() as file:
-                tokens = tokenize(file.read())
-        except FileNotFoundError:
-            raise QuomError('File not found: \'{}\''.format(file_path))
 
         for token in tokens:
             # Find local includes.
@@ -131,7 +144,7 @@ class Quom:
         if not isinstance(token, PreprocessorIncludeToken) or not token.is_local_include:
             return token
 
-        self.__process_file(file_path.parent / str(token.path), is_source_file)
+        self.__process_file(file_path.parent, Path(str(token.path)), is_source_file)
         # Take include tokens line break token if any.
         token = token.preprocessor_tokens[-2]
         if isinstance(token, LinebreakWhitespaceToken):
@@ -144,7 +157,7 @@ class Quom:
             return False
 
         while not self.__source_files.empty():
-            self.__process_file(self.__source_files.get(), True)
+            self.__process_file(Path(), self.__source_files.get(), True)
 
         return True
 

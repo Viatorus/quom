@@ -1,5 +1,6 @@
 import argparse
 import sys
+import traceback
 from pathlib import Path
 
 from .quom import Quom
@@ -17,15 +18,13 @@ def main():
                         help='Regex format of the include guard. Default: %(default)s')
     parser.add_argument('--trim', '-t', action='store_true', default=True,
                         help='Reduce continuous line breaks to one. Default: %(default)s')
+    parser.add_argument('--include_directory', '-I', type=Path, action='append', default=[],
+                        help='Add include directories for header files.')
 
     args = parser.parse_args()
 
-    try:
-        with args.output_path.open('w+') as file:
-            Quom(args.input_path, file, args.stitch, args.include_guard, args.trim)
-    except Exception as e:
-        print('Error: {}'.format(e), file=sys.stderr)
-        return 1
+    with args.output_path.open('w+') as file:
+        Quom(args.input_path, file, args.stitch, args.include_guard, args.trim, args.include_directory)
 
 
 if __name__ == '__main__':
