@@ -40,7 +40,7 @@ def main():
 
     with args.output_path.open('w+') as file:
         Quom(args.input_path, file, args.stitch, args.include_guard, args.trim, args.include_directory,
-             args.source_directories)
+             source_directories)
 
 
 if __name__ == '__main__':
