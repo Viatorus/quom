@@ -20,11 +20,27 @@ def main():
                         help='Reduce continuous line breaks to one. Default: %(default)s')
     parser.add_argument('--include_directory', '-I', type=Path, action='append', default=[],
                         help='Add include directories for header files.')
+    parser.add_argument('--source_directory', '-S', type=str, action='append', default=['.'],
+                        help='Set the source directories for source files.'
+                             'Use . or .. in front of paths to mark them as relative to the header file.')
 
     args = parser.parse_args()
 
+    # Transform source directories to distingue between:
+    # - relative from header file (starting with dot)
+    # - relative from workdir
+    # - absolute paths.
+    source_directories = []
+    for src in args.source_directories:
+        path = Path(src)
+        if path.is_absolute() or src.startswith('.'):
+            source_directories.append(path)
+        else:
+            source_directories.append(path.resolve())
+
     with args.output_path.open('w+') as file:
-        Quom(args.input_path, file, args.stitch, args.include_guard, args.trim, args.include_directory)
+        Quom(args.input_path, file, args.stitch, args.include_guard, args.trim, args.include_directory,
+             args.source_directories)
 
 
 if __name__ == '__main__':

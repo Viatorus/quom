@@ -29,12 +29,14 @@ def contains_only_whitespace_and_comment_tokens(tokens: List[Token]):
 class Quom:
     def __init__(self, src_file_path: Union[Path, str], dst: TextIO, stitch_format: str = None,
                  include_guard_format: str = None, trim: bool = True,
-                 include_directories: List[Union[Path, str]] = None):
+                 include_directories: List[Union[Path, str]] = None,
+                 source_directories: List[Union[Path]] = None):
         self.__dst = dst
         self.__stitch_format = stitch_format
         self.__include_guard_format = re.compile('^{}$'.format(include_guard_format)) if include_guard_format else None
         self.__trim = trim
         self.__include_directories = [Path(x) for x in include_directories] if include_directories else []
+        self.__source_directories = source_directories if source_directories else [Path('.')]
 
         self.__processed_files = set()
         self.__source_files = Queue()
@@ -135,10 +137,15 @@ class Quom:
 
         # Checks if a equivalent compilation unit exits.
         for extension in ['.c', '.cpp', '.cxx', '.cc', '.c++', '.cp', '.C']:
-            file_path = header_file_path.with_suffix(extension)
-            if file_path.exists():
-                self.__source_files.put(file_path)
-                break
+            for src_dir in self.__source_directories:
+                if src_dir.is_absolute():
+                    file_path = (src_dir / header_file_path.name)
+                else:
+                    file_path = header_file_path.parent / src_dir / header_file_path.name
+                file_path = file_path.with_suffix(extension)
+                if file_path.exists():
+                    self.__source_files.put(file_path)
+                    break
 
     def __scan_for_include(self, file_path: Path, token: Token, is_source_file: bool) -> Union[Token, None]:
         if not isinstance(token, PreprocessorIncludeToken) or not token.is_local_include:
