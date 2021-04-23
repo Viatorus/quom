@@ -41,15 +41,22 @@ def test_source_directory(fs):
     assert dst.getvalue() != RESULT
 
     dst = StringIO()
+    Quom(Path('include/main.hpp'), dst, relative_source_directories=[Path('../src')])
+    assert dst.getvalue() == RESULT
+
+    dst = StringIO()
     Quom(Path('include/main.hpp'), dst, source_directories=[Path('src').resolve()])
     assert dst.getvalue() == RESULT
 
     dst = StringIO()
-    Quom(Path('include/main.hpp'), dst, relative_source_directories=[Path('../src')])
+    Quom(Path('include/main.hpp'), dst, source_directories=[Path('/project/src')])
     assert dst.getvalue() == RESULT
 
     main(['include/main.hpp', 'result.hpp', '-S', './../src'])
     assert Path('result.hpp').read_text() == RESULT
 
     main(['include/main.hpp', 'result.hpp', '-S', 'src'])
+    assert Path('result.hpp').read_text() == RESULT
+
+    main(['include/main.hpp', 'result.hpp', '-S', '/project/src'])
     assert Path('result.hpp').read_text() == RESULT
