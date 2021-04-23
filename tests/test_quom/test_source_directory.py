@@ -2,9 +2,8 @@ import os
 from io import StringIO
 from pathlib import Path
 
-import pytest
-
-from quom import Quom, QuomError
+from quom import Quom
+from quom.__main__ import main
 
 FILE_MAIN_HPP = """
 int foo = 3;
@@ -26,6 +25,8 @@ int foo() { return 42; }
 
 
 def test_source_directory(fs):
+    os.makedirs('project/')
+    os.chdir('project/')
     os.makedirs('include/')
     os.makedirs('src/')
 
@@ -36,9 +37,19 @@ def test_source_directory(fs):
         file.write(FILE_MAIN_CPP)
 
     dst = StringIO()
+    Quom(Path('include/main.hpp'), dst)
+    assert dst.getvalue() != RESULT
+
+    dst = StringIO()
     Quom(Path('include/main.hpp'), dst, source_directories=[Path('src').resolve()])
     assert dst.getvalue() == RESULT
 
     dst = StringIO()
-    Quom(Path('include/main.hpp'), dst, source_directories=[Path('../src')])
+    Quom(Path('include/main.hpp'), dst, relative_source_directories=[Path('../src')])
     assert dst.getvalue() == RESULT
+
+    main(['include/main.hpp', 'result.hpp', '-S', './../src'])
+    assert Path('result.hpp').read_text() == RESULT
+
+    main(['include/main.hpp', 'result.hpp', '-S', 'src'])
+    assert Path('result.hpp').read_text() == RESULT

@@ -2,11 +2,12 @@ import argparse
 import sys
 import traceback
 from pathlib import Path
+from typing import List
 
 from .quom import Quom
 
 
-def main():
+def main(args: List[str]):
     parser = argparse.ArgumentParser(prog='quom', description='Single header generator for C/C++ libraries.')
     parser.add_argument('input_path', metavar='input', type=Path, help='Input file path of the main file.')
     parser.add_argument('output_path', metavar='output', type=Path,
@@ -22,26 +23,31 @@ def main():
                         help='Add include directories for header files.')
     parser.add_argument('--source_directory', '-S', type=str, action='append', default=['.'],
                         help='Set the source directories for source files.'
-                             'Use . or .. in front of paths to mark them as relative to the header file.')
+                             'Use ./ in front of a path to mark as relative to the header file.')
 
-    args = parser.parse_args()
+    args = parser.parse_args(args)
 
     # Transform source directories to distingue between:
     # - relative from header file (starting with dot)
     # - relative from workdir
-    # - absolute paths.
+    # - absolute path
+    relative_source_directories = []
     source_directories = []
-    for src in args.source_directories:
+    for src in args.source_directory:
         path = Path(src)
-        if path.is_absolute() or src.startswith('.'):
-            source_directories.append(path)
+        if src == '.' or src.startswith('./'):
+            relative_source_directories.append(path)
         else:
             source_directories.append(path.resolve())
 
     with args.output_path.open('w+') as file:
         Quom(args.input_path, file, args.stitch, args.include_guard, args.trim, args.include_directory,
-             source_directories)
+             relative_source_directories, source_directories)
+
+
+def run():
+    main(sys.argv[1:])
 
 
 if __name__ == '__main__':
-    sys.exit(main())
+    run()

@@ -1,3 +1,4 @@
+import os
 import re
 from pathlib import Path
 from queue import Queue
@@ -30,12 +31,15 @@ class Quom:
     def __init__(self, src_file_path: Union[Path, str], dst: TextIO, stitch_format: str = None,
                  include_guard_format: str = None, trim: bool = True,
                  include_directories: List[Union[Path, str]] = None,
+                 relative_source_directories: List[Union[Path]] = None,
                  source_directories: List[Union[Path]] = None):
         self.__dst = dst
         self.__stitch_format = stitch_format
         self.__include_guard_format = re.compile('^{}$'.format(include_guard_format)) if include_guard_format else None
         self.__trim = trim
         self.__include_directories = [Path(x) for x in include_directories] if include_directories else []
+        self.__relative_source_directories = relative_source_directories if relative_source_directories else [] \
+            if source_directories else [Path('.')]
         self.__source_directories = source_directories if source_directories else [Path('.')]
 
         self.__processed_files = set()
@@ -89,7 +93,9 @@ class Quom:
 
             self.__write_token(token, is_main_header)
 
-        self.__find_possible_source_file(file_path)
+        file_path = self.__find_possible_source_file(file_path)
+        if file_path:
+            self.__source_files.put(file_path)
 
     def __write_token(self, token: Token, is_main_header: bool):
         if isinstance(token, StartToken) or isinstance(token, EndToken):
@@ -131,21 +137,21 @@ class Quom:
                     contains_only_whitespace_and_comment_tokens(token.preprocessor_arguments[i + 1:]):
                 return True
 
-    def __find_possible_source_file(self, header_file_path: Path):
+    def __find_possible_source_file(self, header_file_path: Path) -> Union[Path, None]:
         if header_file_path.suffix in ['.c', '.cpp', '.cxx', '.cc', '.c++', '.cp', '.C']:
             return
 
         # Checks if a equivalent compilation unit exits.
         for extension in ['.c', '.cpp', '.cxx', '.cc', '.c++', '.cp', '.C']:
-            for src_dir in self.__source_directories:
-                if src_dir.is_absolute():
-                    file_path = (src_dir / header_file_path.name)
-                else:
-                    file_path = header_file_path.parent / src_dir / header_file_path.name
-                file_path = file_path.with_suffix(extension)
+            for src_dir in self.__relative_source_directories:
+                file_path = (header_file_path.parent / src_dir / header_file_path.name).with_suffix(extension)
                 if file_path.exists():
-                    self.__source_files.put(file_path)
-                    break
+                    return file_path
+            for src_dir in self.__source_directories:
+                file_path = (src_dir / header_file_path.name).with_suffix(extension).resolve()
+                if file_path.exists():
+                    return file_path
+        return None
 
     def __scan_for_include(self, file_path: Path, token: Token, is_source_file: bool) -> Union[Token, None]:
         if not isinstance(token, PreprocessorIncludeToken) or not token.is_local_include:
