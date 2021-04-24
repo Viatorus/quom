@@ -4,6 +4,7 @@ from pathlib import Path
 import pytest
 
 from quom import Quom, QuomError
+from quom.__main__ import main
 
 FILE_MAIN_HPP = """\
 #pragma once
@@ -247,3 +248,13 @@ def test_with_missing_source_file(fs):
     Quom(Path('main.hpp'), dst)
 
     assert dst.getvalue() == RESULT_NORMAL_WITHOUT_SOURCES
+
+
+def test_main(fs):
+    init()
+
+    main(['main.hpp', 'result.hpp'])
+    assert Path('result.hpp').read_text() == RESULT_NORMAL
+
+    main(['main.hpp', 'result.hpp', '-S', '.'])
+    assert Path('result.hpp').read_text() == RESULT_NORMAL
