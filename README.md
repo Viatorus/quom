@@ -1,11 +1,11 @@
 ![logo](https://raw.githubusercontent.com/Viatorus/quom/master/artwork/logo_banner.png)
 
-[![Travis](https://travis-ci.org/Viatorus/quom.svg?branch=master)](https://travis-ci.org/Viatorus/quom/)
+[![Build Status](https://github.com/Viatorus/quom/workflows/Testing/badge.svg)](https://github.com/viatorus/quom/actions)
 [![PyPI](https://img.shields.io/pypi/v/quom.svg)](https://pypi.org/project/Quom/)
 
 
 # Quom
-Quom is a single file generator for C/C++.
+Quom is a single file generator for C/C++.-
 
 It resolves all included local headers starting with your main C/C++ file.
 
