@@ -214,7 +214,7 @@ def test_with_mismatching_include_guard_format(fs):
 
 def test_with_stitch_location(fs):
     init()
-    with open("main.hpp", "w") as file:
+    with open('main.hpp', 'w') as file:
         file.write(FILE_MAIN_WITH_STITCH_LOCATION_HPP)
 
     dst = StringIO()

@@ -1,3 +1,4 @@
+# flake8: noqa Q003
 import sys
 
 from . import tokenizer

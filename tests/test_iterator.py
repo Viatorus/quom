@@ -35,8 +35,8 @@ def test_raw_iterator():
     it = RawIterator('a\\\rb')
     check_iterator(it, 'a\\\rb')
 
-    it = RawIterator("a\\\r\\\r\nb")
-    check_iterator(it, "a\\\r\\\r\nb")
+    it = RawIterator('a\\\r\\\r\nb')
+    check_iterator(it, 'a\\\r\\\r\nb')
 
     it = RawIterator('a\\b')
     check_iterator(it, 'a\\b')
@@ -91,8 +91,8 @@ def test_escape_iterator():
     it = LineWrapIterator('a\\\\\nb')
     check_iterator(it, 'a\\b')
 
-    it = LineWrapIterator("a\\\r\\\r\nb")
-    check_iterator(it, "ab")
+    it = LineWrapIterator('a\\\r\\\r\nb')
+    check_iterator(it, 'ab')
 
     it = LineWrapIterator('a\\b')
     check_iterator(it, 'a\\b')

@@ -1,9 +1,7 @@
 from io import StringIO
 from pathlib import Path
 
-import pytest
-
-from quom import Quom, QuomError
+from quom import Quom
 
 FILE_MAIN_HPP = """\
 #pragma once
@@ -114,9 +112,9 @@ def test_normal_without_trim(fs):
 
 def test_without_newline_at_end(fs):
     with open('main.hpp', 'w+') as file:
-        file.write("int a;")
+        file.write('int a;')
 
     dst = StringIO()
     Quom(Path('main.hpp'), dst)
 
-    assert dst.getvalue() == "int a;"
+    assert dst.getvalue() == 'int a;'

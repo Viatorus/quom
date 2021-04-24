@@ -1,3 +1,4 @@
+# flake8: noqa Q003
 # Tokenizer
 from .tokenize import tokenize
 from .token import Token, EmptyToken, StartToken, EndToken

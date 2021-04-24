@@ -27,21 +27,21 @@ def check_is_raw_encoding(token: Token):
 
 
 def scan_for_quote_single(tokens: List[Token], it: LineWrapIterator):
-    if it.curr != '\'':
+    if it.curr != "'":
         return False
     start = it.copy()
 
     # Parse until non escaped '.
     backslashes = 0
-    while it.next() and (it.curr != '\'' or backslashes % 2 != 0):
+    while it.next() and (it.curr != "'" or backslashes % 2 != 0):
         if it.curr == '\\':
             backslashes += 1
         else:
             backslashes = 0
 
     # Check if end of file is reached.
-    if it.curr != '\'':
-        raise TokenizeError("Character sequence not terminated!", it)
+    if it.curr != "'":
+        raise TokenizeError('Character sequence not terminated!', it)
     it.next()
 
     tokens.append(SingleQuoteToken(start, it))
@@ -65,7 +65,7 @@ def scan_for_quote_double(tokens: List[Token], it: LineWrapIterator):
 
         # Check if end of file is reached.
         if it.curr != '"':
-            raise TokenizeError("Character sequence not terminated!", it)
+            raise TokenizeError('Character sequence not terminated!', it)
         it.next()
     else:
         delimiter = ''
