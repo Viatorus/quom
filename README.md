@@ -5,7 +5,7 @@
 
 
 # Quom
-Quom is a single file generator for C/C++.-
+Quom is a single file generator for C/C++.
 
 It resolves all included local headers starting with your main C/C++ file.
 
