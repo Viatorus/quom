@@ -1,6 +1,5 @@
 import argparse
 import sys
-import traceback
 from pathlib import Path
 from typing import List
 
@@ -22,7 +21,7 @@ def main(args: List[str]):
     parser.add_argument('--include_directory', '-I', type=Path, action='append', default=[],
                         help='Add include directories for header files.')
     parser.add_argument('--source_directory', '-S', type=str, action='append', default=['.'],
-                        help='Set the source directories for source files.'
+                        help='Set the source directories for source files. '
                              'Use ./ in front of a path to mark as relative to the header file.')
 
     args = parser.parse_args(args)
