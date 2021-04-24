@@ -4,6 +4,6 @@ python:
   - 3.6
 
 install:
-  - pip install -r .[testing]
+  - pip install -e .[testing]
 script:
   - pytest
