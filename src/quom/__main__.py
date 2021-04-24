@@ -3,7 +3,7 @@ import sys
 from pathlib import Path
 from typing import List
 
-from .quom import Quom
+from quom import Quom
 
 try:
     from quom import __version__
