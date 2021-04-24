@@ -1,43 +1,20 @@
-from os import path
-from io import open
-from setuptools import find_packages, setup
+"""
+    Setup file for compile-time-printer.
+    Use setup.cfg to configure your project.
+    This file was generated with PyScaffold 4.0b1.
+    PyScaffold helps you to put up the scaffold of your new Python project.
+    Learn more under: https://pyscaffold.org/
+"""
+from setuptools import setup
 
-here = path.abspath(path.dirname(__file__))
-
-# Get the long description from the README file.
-with open(path.join(here, 'README.md'), encoding='utf-8') as f:
-    long_description = f.read()
-
-setup(
-    name='Quom',
-    version='1.2.0',
-    url='https://github.com/Viatorus/quom',
-    license='MIT',
-
-    author='Toni Neubert',
-    author_email='lutztonineubert@gmail.com',
-
-    description='Quom is a single header generator for C/C++ libraries.',
-    long_description=long_description,
-    long_description_content_type='text/markdown',
-
-    packages=find_packages(exclude=('tests',)),
-
-    install_requires=[],
-
-    zip_safe=False,
-
-    classifiers=[
-        'Development Status :: 5 - Production/Stable',
-        'Topic :: Software Development :: Build Tools',
-        'License :: OSI Approved :: MIT License',
-        'Programming Language :: Python',
-        'Programming Language :: Python :: 3.6'
-    ],
-
-    entry_points={
-        'console_scripts': [
-            'quom=quom.__main__:main',
-        ]
-    },
-)
+if __name__ == '__main__':
+    try:
+        setup(use_scm_version={'version_scheme': 'post-release'})
+    except:  # noqa
+        print(
+            '\n\nAn error occurred while building the project, '
+            'please ensure you have the most updated version of setuptools, '
+            'setuptools_scm and wheel with:\n'
+            '   pip install -U setuptools setuptools_scm wheel\n\n'
+        )
+        raise

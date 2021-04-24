@@ -3,11 +3,17 @@ import sys
 from pathlib import Path
 from typing import List
 
-from .quom import Quom
+from quom import Quom
+
+try:
+    from quom import __version__
+except ImportError:
+    __version__ = 'unknown'
 
 
 def main(args: List[str]):
     parser = argparse.ArgumentParser(prog='quom', description='Single header generator for C/C++ libraries.')
+    parser.add_argument('--version', action='version', version='quom {ver}'.format(ver=__version__))
     parser.add_argument('input_path', metavar='input', type=Path, help='Input file path of the main file.')
     parser.add_argument('output_path', metavar='output', type=Path,
                         help='Output file path of the generated single header file.')
