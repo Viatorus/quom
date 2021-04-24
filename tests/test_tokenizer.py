@@ -3,10 +3,10 @@ from typing import List
 import pytest
 
 from quom.tokenizer import CommentToken, CppCommentToken, CCommentToken, NumberToken, PreprocessorToken, \
-    PreprocessorIncludeToken, PreprocessorUnknownIncludeToken, QuoteToken, SingleQuoteToken, DoubleQuoteToken, RemainingToken, WhitespaceToken, \
-    WhitespaceWhitespaceToken, LinebreakWhitespaceToken, PreprocessorPragmaToken, PreprocessorPragmaOnceToken, \
-    PreprocessorDefineToken, PreprocessorIfNotDefinedToken, PreprocessorEndIfToken, tokenize, TokenizeError, Token, \
-    StartToken, EndToken
+    PreprocessorIncludeToken, PreprocessorUnknownIncludeToken, QuoteToken, SingleQuoteToken, DoubleQuoteToken, \
+    RemainingToken, WhitespaceToken, WhitespaceWhitespaceToken, LinebreakWhitespaceToken, PreprocessorPragmaToken, \
+    PreprocessorPragmaOnceToken, PreprocessorDefineToken, PreprocessorIfNotDefinedToken, PreprocessorEndIfToken, \
+    tokenize, TokenizeError, Token, StartToken, EndToken
 
 
 def check_tokens(tokens: List[Token], res):
@@ -110,26 +110,26 @@ def test_whitespace():
 
 
 def test_quote_single():
-    tokens = tokenize('\'abc\'')
+    tokens = tokenize("'abc'")
     check_tokens(tokens, [SingleQuoteToken])
     check_tokens(tokens, [QuoteToken])
-    assert str(tokens[1]) == '\'abc\''
+    assert str(tokens[1]) == "'abc'"
 
-    tokens = tokenize(' \'abc\' ')
+    tokens = tokenize(" 'abc' ")
     check_tokens(tokens, [WhitespaceWhitespaceToken, SingleQuoteToken, WhitespaceWhitespaceToken])
-    assert str(tokens[2]) == '\'abc\''
+    assert str(tokens[2]) == "'abc'"
 
-    tokens = tokenize('\'a\\bc\'')
+    tokens = tokenize("'a\\bc'")
     check_tokens(tokens, [SingleQuoteToken])
 
-    tokens = tokenize('\'a\\\'bc\'')
+    tokens = tokenize("'a\\'bc'")
     check_tokens(tokens, [SingleQuoteToken])
 
     with pytest.raises(TokenizeError):
-        tokenize('\'a')
+        tokenize("'a")
 
     with pytest.raises(TokenizeError):
-        tokenize('\'')
+        tokenize("'")
 
 
 def test_quote_double():
@@ -207,18 +207,18 @@ def test_number():
     check_tokens(tokens, [NumberToken])
     assert str(tokens[1]) == '123'
 
-    tokens = tokenize('1\'23')
+    tokens = tokenize("1'23")
     check_tokens(tokens, [NumberToken])
-    assert str(tokens[1]) == '1\'23'
+    assert str(tokens[1]) == "1'23"
 
     tokens = tokenize(' 1234567890 ')
     check_tokens(tokens, [WhitespaceWhitespaceToken, NumberToken, WhitespaceWhitespaceToken])
-    assert str(tokens[2]) == "1234567890"
+    assert str(tokens[2]) == '1234567890'
 
-    tokens = tokenize("001.1")
+    tokens = tokenize('001.1')
     check_tokens(tokens, [NumberToken])
 
-    tokens = tokenize("001e1")
+    tokens = tokenize('001e1')
     check_tokens(tokens, [NumberToken])
 
     tokens = tokenize('0x')
@@ -227,9 +227,9 @@ def test_number():
     tokens = tokenize('1xx13b')
     check_tokens(tokens, [NumberToken])
 
-    tokens = tokenize(".1")
+    tokens = tokenize('.1')
     check_tokens(tokens, [NumberToken])
-    assert str(tokens[1]) == ".1"
+    assert str(tokens[1]) == '.1'
 
     tokens = tokenize('.123')
     check_tokens(tokens, [NumberToken])
@@ -246,7 +246,7 @@ def test_number():
     tokens = tokenize('123e-4')
     check_tokens(tokens, [NumberToken])
 
-    tokens = tokenize('12\'3.345')
+    tokens = tokenize("12'3.345")
     check_tokens(tokens, [NumberToken])
 
     tokens = tokenize('01e1')
@@ -256,7 +256,7 @@ def test_number():
     check_tokens(tokens, [NumberToken])
 
     with pytest.raises(TokenizeError):
-        tokenize('12\'')
+        tokenize("12'")
 
     tokens = tokenize('0x1')
     check_tokens(tokens, [NumberToken])
@@ -264,7 +264,7 @@ def test_number():
     tokens = tokenize('0xFp1')
     check_tokens(tokens, [NumberToken])
 
-    tokens = tokenize('0x02\'3')
+    tokens = tokenize("0x02'3")
     check_tokens(tokens, [NumberToken])
 
     tokens = tokenize('0x023p+1')
@@ -276,7 +276,7 @@ def test_number():
     tokens = tokenize('0x0.123p-1')
     check_tokens(tokens, [NumberToken])
 
-    tokens = tokenize('0x0.e2\'3p-1\'0')
+    tokens = tokenize("0x0.e2'3p-1'0")
     check_tokens(tokens, [NumberToken])
 
     tokens = tokenize('0x0.p1')
@@ -289,7 +289,7 @@ def test_number():
     check_tokens(tokens, [NumberToken])
 
     with pytest.raises(TokenizeError):
-        tokenize('0x12\'')
+        tokenize("0x12'")
 
     tokens = tokenize('0x0.123')
     check_tokens(tokens, [NumberToken])
@@ -307,52 +307,52 @@ def test_number():
     check_tokens(tokens, [NumberToken])
 
     with pytest.raises(TokenizeError):
-        tokenize('0b01\'')
+        tokenize("0b01'")
 
     tokens = tokenize('01')
     check_tokens(tokens, [NumberToken])
 
-    tokens = tokenize('0\'1')
+    tokens = tokenize("0'1")
     check_tokens(tokens, [NumberToken])
 
-    tokens = tokenize('0012345\'67')
+    tokens = tokenize("0012345'67")
     check_tokens(tokens, [NumberToken])
 
     tokens = tokenize('01x')
     check_tokens(tokens, [NumberToken])
 
-    tokens = tokenize('0012345\'68')
+    tokens = tokenize("0012345'68")
     check_tokens(tokens, [NumberToken])
 
-    tokens = tokenize('12\'d.z\'.x1.\'1')
+    tokens = tokenize("12'd.z'.x1.'1")
     check_tokens(tokens, [NumberToken])
 
 
 def test_preprocessor():
-    tokens = tokenize("#")
+    tokens = tokenize('#')
     check_tokens(tokens, [PreprocessorToken])
 
-    tokens = tokenize("#\n ")
+    tokens = tokenize('#\n ')
     check_tokens(tokens, [PreprocessorToken, WhitespaceWhitespaceToken])
 
-    tokens = tokenize("# /**/\n")
+    tokens = tokenize('# /**/\n')
     check_tokens(tokens, [PreprocessorToken])
     check_tokens(tokens[1].preprocessor_tokens,
                  [RemainingToken, WhitespaceWhitespaceToken, CCommentToken, LinebreakWhitespaceToken])
 
-    tokens = tokenize("#pragma")
+    tokens = tokenize('#pragma')
     check_tokens(tokens, [PreprocessorToken])
 
-    tokens = tokenize(" #pragma")
+    tokens = tokenize(' #pragma')
     check_tokens(tokens, [WhitespaceWhitespaceToken, PreprocessorToken])
 
-    tokens = tokenize("#pragma once")
+    tokens = tokenize('#pragma once')
     check_tokens(tokens, [(PreprocessorPragmaToken, PreprocessorPragmaOnceToken)])
 
-    tokens = tokenize("#pragma /*abc*/ once /*def*/")
+    tokens = tokenize('#pragma /*abc*/ once /*def*/')
     check_tokens(tokens, [PreprocessorPragmaToken])
 
-    tokens = tokenize("#pragma once abc")
+    tokens = tokenize('#pragma once abc')
     check_tokens(tokens, [PreprocessorPragmaToken])
 
     tokens = tokenize('#include "abc" ')
@@ -397,10 +397,10 @@ def test_preprocessor():
     tokens = tokenize('# /* abc */ define  /* test */')
     check_tokens(tokens, [PreprocessorDefineToken])
 
-    tokens = tokenize("#ifndef asd")
+    tokens = tokenize('#ifndef asd')
     check_tokens(tokens, [PreprocessorIfNotDefinedToken])
 
-    tokens = tokenize("#endif /*asd*/")
+    tokens = tokenize('#endif /*asd*/')
     check_tokens(tokens, [PreprocessorEndIfToken])
     assert len(tokens[1].preprocessor_instruction) == 2
     assert isinstance(tokens[1].preprocessor_instruction[0], RemainingToken)
@@ -427,9 +427,9 @@ def test_remaining():
     check_tokens(tokens, [RemainingToken])
     assert str(tokens[1]) == '_ab_c'
 
-    for symbol in "+-*/%<>&!=?.,[]{}():|;~^":
+    for symbol in '+-*/%<>&!=?.,[]{}():|;~^':
         tokens = tokenize(symbol)
         check_tokens(tokens, [RemainingToken])
 
-    tokens = tokenize('kwqjj8a8gja98gj9\b\1\¹23')
+    tokens = tokenize('kwqjj8a8gja98gj9\b\1\123')
     check_tokens(tokens, [RemainingToken])

@@ -59,7 +59,7 @@ def scan_for_comment_c_style(tokens: List[Token], it: LineWrapIterator):
         pass
 
     if it.curr != '*':
-        raise TokenizeError("C-style comment not terminated!", it)
+        raise TokenizeError('C-style comment not terminated!', it)
     content_end = it.copy()
     it.next()
     it.next()

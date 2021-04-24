@@ -1,4 +1,3 @@
-import os
 import re
 from pathlib import Path
 from queue import Queue
@@ -78,7 +77,7 @@ class Quom:
                         tokens = tokenize(file.read())
                     break
             else:
-                raise QuomError('Include not found: \'{}\''.format(include_path))
+                raise QuomError('Include not found: "{}"'.format(include_path))
 
         # Skip already processed files.
         if file_path in self.__processed_files:

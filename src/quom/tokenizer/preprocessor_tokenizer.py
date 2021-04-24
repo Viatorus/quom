@@ -102,7 +102,7 @@ def scan_for_preprocessor_include(start: LineWrapIterator, it: LineWrapIterator,
 
         # Check if end of line is reached.
         if it.curr != '"':
-            raise TokenizeError("Character sequence not terminated!", it)
+            raise TokenizeError('Character sequence not terminated!', it)
     elif it.prev == '<':
         # Scan until terminating >.
         while it.next() and it.curr != '\n' and it.curr != '>':
@@ -110,7 +110,7 @@ def scan_for_preprocessor_include(start: LineWrapIterator, it: LineWrapIterator,
 
         # Check if end of line is reached.
         if it.curr != '>':
-            raise TokenizeError("Character sequence not terminated!", it)
+            raise TokenizeError('Character sequence not terminated!', it)
 
     path_end = it.copy()
     it.next()

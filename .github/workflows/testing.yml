@@ -1,0 +1,47 @@
+name: Testing
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  python-test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [ '3.6', '3.7', '3.8', '3.9' ]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          python -m pip install .[testing]
+      - name: Run tests with Python ${{ matrix.python-version }}
+        run: |
+          g++ --version
+          python --version
+          pytest
+      - name: Run flake8
+        if: ${{ matrix.python-version == '3.9' }}
+        run: flake8
+  publish-python-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install setuptools wheel twine
+      - name: Build
+        run: |
+          python setup.py dists
+          twine check dist/*
