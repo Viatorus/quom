@@ -4,8 +4,6 @@ python:
   - 3.6
 
 install:
-  - pip install -r requirements-dev.txt
-  - pip install tox-travis
-
+  - pip install -r .[testing]
 script:
-  - tox
+  - pytest
