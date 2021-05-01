@@ -28,7 +28,7 @@ def main(args: List[str]):
                         help='Add include directories for header files.')
     parser.add_argument('--source_directory', '-S', type=str, action='append', default=['.'],
                         help='Set the source directories for source files. '
-                             'Use ./ in front of a path to mark as relative to the header file.')
+                             'Use ./ or .\\ in front of a path to mark as relative to the header file.')
 
     args = parser.parse_args(args)
 
@@ -40,7 +40,7 @@ def main(args: List[str]):
     source_directories = []
     for src in args.source_directory:
         path = Path(src)
-        if src == '.' or src.startswith('./'):
+        if src == '.' or src.startswith('./') or src.startswith('.\\'):
             relative_source_directories.append(path)
         else:
             source_directories.append(path.resolve())
