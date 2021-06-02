@@ -17,7 +17,7 @@ At the end there will be one single file with all your header and sources joined
 ## Installation
 
 ```
-pip install quom
+pip install --user quom
 ```
 
 Only **Python 3.6+** is supported.
