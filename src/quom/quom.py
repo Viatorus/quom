@@ -66,14 +66,14 @@ class Quom:
         # First check if file exists relative.
         file_path = relative_path / include_path
         if file_path.exists():
-            with file_path.open() as file:
+            with file_path.open(encoding='utf-8') as file:
                 tokens = tokenize(file.read())
         else:
             # Otherwise search in include directories.
             for include_directory in self.__include_directories:
                 file_path = include_directory / include_path
                 if file_path.exists():
-                    with file_path.open() as file:
+                    with file_path.open(encoding='utf-8') as file:
                         tokens = tokenize(file.read())
                     break
             else:

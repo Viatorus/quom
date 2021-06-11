@@ -45,7 +45,7 @@ def main(args: List[str]):
         else:
             source_directories.append(path.resolve())
 
-    with args.output_path.open('w+') as file:
+    with args.output_path.open('w+', encoding='utf-8') as file:
         Quom(args.input_path, file, args.stitch, args.include_guard, args.trim, args.include_directory,
              relative_source_directories, source_directories)
 
