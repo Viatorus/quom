@@ -80,8 +80,11 @@ class Quom:
                 raise QuomError('Include not found: "{}"'.format(include_path))
 
         # Skip already processed files.
+        file_path = file_path.resolve()
         if file_path in self.__processed_files:
             return
+        print(file_path)
+        #print('""""""""""""""""""""""""""""')
         self.__processed_files.add(file_path)
 
         for token in tokens:
