@@ -47,7 +47,8 @@ optional arguments:
   --source_directory SOURCE_DIRECTORY, -S SOURCE_DIRECTORY
                         Set the source directories for source files.
                         Use ./ in front of a path to mark as relative to the header file.
-
+  --encoding ENCODING, -e ENCODING
+                        The encoding used to read and write all files.
 ```
 
 ## Simple example
