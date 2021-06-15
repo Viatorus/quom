@@ -79,28 +79,28 @@ def test_include_directory(fs):
     os.makedirs('include/my_lib/util')
     os.makedirs('include/my_other_lib/')
 
-    with open('include/my_lib/main.hpp', 'w+') as file:
+    with open('include/my_lib/main.hpp', 'w+', encoding='utf-8') as file:
         file.write(FILE_MAIN_HPP)
 
-    with open('include/my_lib/core/core.hpp', 'w+') as file:
+    with open('include/my_lib/core/core.hpp', 'w+', encoding='utf-8') as file:
         file.write(FILE_CORE_HPP)
 
-    with open('include/my_lib/core/core.cpp', 'w+') as file:
+    with open('include/my_lib/core/core.cpp', 'w+', encoding='utf-8') as file:
         file.write(FILE_CORE_CPP)
 
-    with open('include/my_lib/util/foo.hpp', 'w+') as file:
+    with open('include/my_lib/util/foo.hpp', 'w+', encoding='utf-8') as file:
         file.write(FILE_FOO_HPP)
 
-    with open('include/my_lib/util/foo.cpp', 'w+') as file:
+    with open('include/my_lib/util/foo.cpp', 'w+', encoding='utf-8') as file:
         file.write(FILE_FOO_CPP)
 
-    with open('include/my_other_lib/bar.hpp', 'w+') as file:
+    with open('include/my_other_lib/bar.hpp', 'w+', encoding='utf-8') as file:
         file.write(FILE_BAR_HPP)
 
-    with open('include/my_other_lib/bar.cpp', 'w+') as file:
+    with open('include/my_other_lib/bar.cpp', 'w+', encoding='utf-8') as file:
         file.write(FILE_BAR_CPP)
 
-    with open('include/my_other_lib/info.hpp', 'w+') as file:
+    with open('include/my_other_lib/info.hpp', 'w+', encoding='utf-8') as file:
         file.write(FILE_INFO_HPP)
 
     dst = StringIO()

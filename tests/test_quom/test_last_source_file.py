@@ -82,13 +82,13 @@ int foo = 42;"""
 
 
 def init():
-    with open('main.hpp', 'w+') as file:
+    with open('main.hpp', 'w+', encoding='utf-8') as file:
         file.write(FILE_MAIN_HPP)
 
-    with open('foo.hpp', 'w+') as file:
+    with open('foo.hpp', 'w+', encoding='utf-8') as file:
         file.write(FILE_FOO_HPP)
 
-    with open('foo.cpp', 'w+') as file:
+    with open('foo.cpp', 'w+', encoding='utf-8') as file:
         file.write(FILE_FOO_CPP)
 
 
@@ -111,7 +111,7 @@ def test_normal_without_trim(fs):
 
 
 def test_without_newline_at_end(fs):
-    with open('main.hpp', 'w+') as file:
+    with open('main.hpp', 'w+', encoding='utf-8') as file:
         file.write('int a;')
 
     dst = StringIO()

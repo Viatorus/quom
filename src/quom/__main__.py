@@ -29,6 +29,8 @@ def main(args: List[str]):
     parser.add_argument('--source_directory', '-S', type=str, action='append', default=['.'],
                         help='Set the source directories for source files. '
                              'Use ./ or .\\ in front of a path to mark as relative to the header file.')
+    parser.add_argument('--encoding', '-e', type=str, default='utf-8',
+                        help='The encoding used to read and write all files.')
 
     args = parser.parse_args(args)
 
@@ -45,9 +47,9 @@ def main(args: List[str]):
         else:
             source_directories.append(path.resolve())
 
-    with args.output_path.open('w+') as file:
+    with args.output_path.open('w+', encoding=args.encoding) as file:
         Quom(args.input_path, file, args.stitch, args.include_guard, args.trim, args.include_directory,
-             relative_source_directories, source_directories)
+             relative_source_directories, source_directories, args.encoding)
 
 
 def run():

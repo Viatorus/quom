@@ -31,7 +31,8 @@ class Quom:
                  include_guard_format: str = None, trim: bool = True,
                  include_directories: List[Union[Path, str]] = None,
                  relative_source_directories: List[Union[Path]] = None,
-                 source_directories: List[Union[Path]] = None):
+                 source_directories: List[Union[Path]] = None,
+                 encoding: str = 'utf-8'):
         self.__dst = dst
         self.__stitch_format = stitch_format
         self.__include_guard_format = re.compile('^{}$'.format(include_guard_format)) if include_guard_format else None
@@ -40,6 +41,7 @@ class Quom:
         self.__relative_source_directories = relative_source_directories if relative_source_directories else [] \
             if source_directories else [Path('.')]
         self.__source_directories = source_directories if source_directories else [Path('.')]
+        self.__encoding = encoding
 
         self.__processed_files = set()
         self.__source_files = Queue()
@@ -65,16 +67,11 @@ class Quom:
                        is_main_header=False):
         # First check if file exists relative.
         file_path = relative_path / include_path
-        if file_path.exists():
-            with file_path.open() as file:
-                tokens = tokenize(file.read())
-        else:
+        if not file_path.exists():
             # Otherwise search in include directories.
             for include_directory in self.__include_directories:
                 file_path = include_directory / include_path
                 if file_path.exists():
-                    with file_path.open() as file:
-                        tokens = tokenize(file.read())
                     break
             else:
                 raise QuomError('Include not found: "{}"'.format(include_path))
@@ -84,6 +81,9 @@ class Quom:
         if file_path in self.__processed_files:
             return
         self.__processed_files.add(file_path)
+
+        # Tokenize the file.
+        tokens = tokenize(file_path.read_text(encoding=self.__encoding))
 
         for token in tokens:
             # Find local includes.

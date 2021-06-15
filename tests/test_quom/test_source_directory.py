@@ -30,10 +30,10 @@ def test_source_directory(fs):
     os.makedirs('include/')
     os.makedirs('src/')
 
-    with open('include/main.hpp', 'w+') as file:
+    with open('include/main.hpp', 'w+', encoding='utf-8') as file:
         file.write(FILE_MAIN_HPP)
 
-    with open('src/main.cpp', 'w+') as file:
+    with open('src/main.cpp', 'w+', encoding='utf-8') as file:
         file.write(FILE_MAIN_CPP)
 
     dst = StringIO()
