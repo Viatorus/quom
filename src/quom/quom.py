@@ -80,6 +80,7 @@ class Quom:
                 raise QuomError('Include not found: "{}"'.format(include_path))
 
         # Skip already processed files.
+        file_path = file_path.resolve()
         if file_path in self.__processed_files:
             return
         self.__processed_files.add(file_path)
