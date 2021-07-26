@@ -7,7 +7,7 @@
 # Quom
 Quom is a single file generator for C/C++.
 
-It resolves all included local headers starting with your main C/C++ file.
+It resolves all included local headers starting with your main C/C++ file. This is also known as amalgamation.
 
 Afterwards, it tries to find the related source files and there headers and places them at the end of the main file
 or at a specific stitch location if provided.
