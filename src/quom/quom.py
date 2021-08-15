@@ -1,3 +1,4 @@
+import os
 import re
 from pathlib import Path
 from queue import Queue
@@ -46,6 +47,7 @@ class Quom:
         self.__processed_files = set()
         self.__source_files = Queue()
         self.__cont_lb = CONTINUOUS_LINE_BREAK_START
+        self.__used_linesep = None
         self.__prev_token = EmptyToken()
 
         self.__process_file(Path(), src_file_path, False, True)
@@ -56,12 +58,7 @@ class Quom:
                                 .format(stitch_format))
             while not self.__source_files.empty():
                 self.__process_file(Path(), self.__source_files.get(), True)
-            # Write last token.
-            self.__write_token(self.__prev_token, True)
-        elif self.__cont_lb == CONTINUOUS_LINE_BREAK_START or not isinstance(self.__prev_token,
-                                                                             LinebreakWhitespaceToken):
-            # Write last token, if not a continuous line break.
-            self.__write_token(self.__prev_token, True)
+                self.__write_line_break_if_missing()
 
     def __process_file(self, relative_path: Path, include_path: Path, is_source_file: bool,
                        is_main_header=False):
@@ -109,9 +106,8 @@ class Quom:
         if self.__is_cont_line_break(token):
             return
 
-        # Write previous token, store current.
-        if self.__prev_token:
-            self.__dst.write(str(self.__prev_token.raw))
+        # Write token and store.
+        self.__dst.write(str(token.raw))
         self.__prev_token = token
 
     @staticmethod
@@ -171,10 +167,15 @@ class Quom:
 
         while not self.__source_files.empty():
             self.__process_file(Path(), self.__source_files.get(), True)
+            self.__write_line_break_if_missing()
 
         return True
 
     def __is_cont_line_break(self, token: Token) -> bool:
+        # Save a used line break for later.
+        if self.__used_linesep is None and isinstance(token, LinebreakWhitespaceToken):
+            self.__used_linesep = token.raw
+
         if not self.__trim:
             return False
 
@@ -187,3 +188,9 @@ class Quom:
             self.__cont_lb = CONTINUOUS_LINE_BREAK_START
 
         return self.__cont_lb >= CONTINUOUS_BREAK_REACHED
+
+    def __write_line_break_if_missing(self):
+        if not isinstance(self.__prev_token, LinebreakWhitespaceToken):
+            if self.__used_linesep is None:
+                self.__used_linesep = os.linesep  # fallback
+            self.__dst.write(self.__used_linesep)

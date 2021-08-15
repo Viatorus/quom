@@ -53,7 +53,8 @@ extern int foo;
 
 #include <algorithm>
 
-int foo = 42;"""
+int foo = 42;
+"""
 
 RESULT_NORMAL_WITHOUT_TRIM = """\
 #pragma once
@@ -78,7 +79,8 @@ extern int foo;
 
 #include <algorithm>
 
-int foo = 42;"""
+int foo = 42;
+"""
 
 
 def init():
