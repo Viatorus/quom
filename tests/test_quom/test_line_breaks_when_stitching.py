@@ -12,15 +12,15 @@ int main() {
 // End
 """
 
-FILE_A_HPP = "int a;"
+FILE_A_HPP = 'int a;'
 
 FILE_A_CPP = """\
 #include "b.hpp"
 #include "c.hpp"
 void mid() {}"""
 
-FILE_B_HPP = "int b;"
-FILE_C_HPP = "int c;"
+FILE_B_HPP = 'int b;'
+FILE_C_HPP = 'int c;'
 
 FILE_B_CPP = """\
 #include <b>"""
