@@ -9,7 +9,7 @@ Quom is a single file generator for C/C++.
 
 It resolves all included local headers starting with your main C/C++ file. This is also known as amalgamation.
 
-Afterwards, it tries to find the related source files and there headers and places them at the end of the main file
+Afterwards, it tries to find the related source files and their headers and places them at the end of the main file
 or at a specific stitch location if provided.
 
 At the end there will be one single file with all your header and sources joined together.
@@ -131,7 +131,7 @@ The project:
 #pragma once
 
 #ifndef FOOBAR_FOO_HPP
-#endif FOOBAR_FOO_HPP
+#define FOOBAR_FOO_HPP
 
 extern int foo; 
 
@@ -152,7 +152,7 @@ int foo = 42;
 #pragma once
 
 #ifndef FOOBAR_HPP
-#endif FOOBAR_HPP
+#define FOOBAR_HPP
 
 #include "foo.hpp"
 
@@ -177,7 +177,7 @@ quom src/foobar.hpp foobar_gen.hpp -s "~> stitch <~" -g FOOBAR_.+_HPP
 #pragma once
 
 #ifndef FOOBAR_HPP
-#endif FOOBAR_HPP
+#define FOOBAR_HPP
 
 extern int foo;
 
