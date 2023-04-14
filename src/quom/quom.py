@@ -113,7 +113,7 @@ class Quom:
         self.__dst.write(str(token.raw))
         self.__prev_token = token
 
-    def __has_guard(self, tokens: list[Token]):
+    def __has_guard(self, tokens: List[Token]):
         for token in tokens:
             if self.__is_pragma_once(token) or self.__is_include_guard(token):
                 return True
