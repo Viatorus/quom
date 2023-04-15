@@ -11,6 +11,7 @@ from .tokenizer import tokenize, Token, CommentToken, PreprocessorToken, Preproc
 
 CONTINUOUS_LINE_BREAK_START = 0
 CONTINUOUS_BREAK_REACHED = 3
+SOURCE_FILE_EXTENSIONS = ['.c', '.cpp', '.cxx', '.cc', '.c++', '.cp', '.C']
 
 
 def find_token(tokens: List[Token], token_type: any):
@@ -141,13 +142,14 @@ class Quom:
             if comment_token and self.__include_guard_format.match(str(comment_token.content).strip()) and \
                     contains_only_whitespace_and_comment_tokens(token.preprocessor_arguments[i + 1:]):
                 return True
+        return False
 
     def __find_possible_source_file(self, header_file_path: Path) -> Union[Path, None]:
-        if header_file_path.suffix in ['.c', '.cpp', '.cxx', '.cc', '.c++', '.cp', '.C']:
+        if header_file_path.suffix in SOURCE_FILE_EXTENSIONS:
             return
 
         # Checks if a equivalent compilation unit exits.
-        for extension in ['.c', '.cpp', '.cxx', '.cc', '.c++', '.cp', '.C']:
+        for extension in SOURCE_FILE_EXTENSIONS:
             for src_dir in self.__relative_source_directories:
                 file_path = (header_file_path.parent / src_dir / header_file_path.name).with_suffix(extension)
                 if file_path.exists():
