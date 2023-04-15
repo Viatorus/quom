@@ -1,9 +1,5 @@
-from io import StringIO
 from pathlib import Path
 
-import pytest
-
-from quom import Quom, QuomError
 from quom.__main__ import main
 
 FILE_FOO_HPP = """
