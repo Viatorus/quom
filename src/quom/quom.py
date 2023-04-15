@@ -77,10 +77,13 @@ class Quom:
         file_path = file_path.resolve()
         if file_path in self.__processed_files:
             return
-        self.__processed_files.add(file_path)
 
         # Tokenize the file.
         tokens = tokenize(file_path.read_text(encoding=self.__encoding))
+
+        # Add to processed files.
+        if is_main_header or self.__has_guard(tokens):
+            self.__processed_files.add(file_path)
 
         for token in tokens:
             # Find local includes.
@@ -109,6 +112,12 @@ class Quom:
         # Write token and store.
         self.__dst.write(str(token.raw))
         self.__prev_token = token
+
+    def __has_guard(self, tokens: List[Token]):
+        for token in tokens:
+            if self.__is_pragma_once(token) or self.__is_include_guard(token):
+                return True
+        return False
 
     @staticmethod
     def __is_pragma_once(token: Token):
