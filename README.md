@@ -20,7 +20,7 @@ At the end there will be one single file with all your header and sources joined
 pip install --user quom
 ```
 
-Only **Python 3.6+** is supported.
+Requires Python 3.7 or later.
 
 ## How to use it
 
