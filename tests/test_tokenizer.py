@@ -327,6 +327,15 @@ def test_number():
     tokens = tokenize("12'd.z'.x1.'1")
     check_tokens(tokens, [NumberToken])
 
+    tokens = tokenize("1'000")
+    check_tokens(tokens, [NumberToken])
+
+    tokens = tokenize("1'000'000")
+    check_tokens(tokens, [NumberToken])
+
+    tokens = tokenize("1'000'000'000")
+    check_tokens(tokens, [NumberToken])
+
 
 def test_preprocessor():
     tokens = tokenize('#')
