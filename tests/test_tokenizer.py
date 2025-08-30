@@ -336,10 +336,10 @@ def test_number():
     tokens = tokenize("1'000'000'000")
     check_tokens(tokens, [NumberToken])
 
-    tokens = tokenize("0x0")
+    tokens = tokenize("0xE'0")
     check_tokens(tokens, [NumberToken])
 
-    tokens = tokenize("0xA")
+    tokens = tokenize("0x0'E")
     check_tokens(tokens, [NumberToken])
 
     tokens = tokenize("+0x1'1")

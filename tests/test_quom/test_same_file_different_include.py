@@ -41,7 +41,4 @@ def test_same_file_different_include(fs):
     dst = StringIO()
     Quom('main.cpp', dst)
 
-    print(dst.getvalue())
-    print(RESULT)
-
     assert dst.getvalue() == RESULT
