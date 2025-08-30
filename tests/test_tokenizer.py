@@ -432,7 +432,7 @@ def test_preprocessor():
 
 
 def test_symbol():
-    for symbol in '#+-*/%<>&!=?.,[]{}():|;~^':
+    for symbol in '+-*/%<>&!=?.,[]{}():|;~^':
         tokens = tokenize(symbol)
         check_tokens(tokens, [SymbolToken])
 

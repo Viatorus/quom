@@ -9,7 +9,7 @@ class SymbolToken(Token):
 
 
 def is_symbol(c: str) -> bool:
-    return c in '#+-*/%<>&!=?.,[]{}():|;~^'
+    return c in '+-*/%<>&!=?.,[]{}():|;~^'
 
 
 def scan_for_symbol(tokens: List[Token], it: LineWrapIterator):
