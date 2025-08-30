@@ -15,11 +15,6 @@ def is_symbol(c: str) -> bool:
 def scan_for_remaining(tokens: List[Token], it: LineWrapIterator):
     start = it.copy()
 
-    if is_symbol(it.curr):
-        it.next()
-        tokens.append(RemainingToken(start, it))
-        return True
-
     # Stop on whitespace, quotes, comments, dot followed by a digit, or numeric after a symbol.
     while it.next() and not (it.curr in ' \t\v\f\n\r' or it.curr in '"\'' or (
             it.curr == '/' and it.lookahead in '/*') or (it.curr == '.' and it.lookahead.isnumeric()) or
