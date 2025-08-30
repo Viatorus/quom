@@ -5,8 +5,8 @@ import pytest
 from quom.tokenizer import CommentToken, CppCommentToken, CCommentToken, NumberToken, PreprocessorToken, \
     PreprocessorIncludeToken, PreprocessorUnknownIncludeToken, QuoteToken, SingleQuoteToken, DoubleQuoteToken, \
     RemainingToken, WhitespaceToken, WhitespaceWhitespaceToken, LinebreakWhitespaceToken, PreprocessorPragmaToken, \
-    tokenize, TokenizeError, Token, StartToken, EndToken, PreprocessorPragmaOnceToken, PreprocessorDefineToken, \
-    PreprocessorIfNotDefinedToken, PreprocessorEndIfToken
+    PreprocessorPragmaOnceToken, PreprocessorDefineToken, PreprocessorIfNotDefinedToken, PreprocessorEndIfToken, \
+    tokenize, TokenizeError, Token, StartToken, EndToken
 
 
 def check_tokens(tokens: List[Token], res):
@@ -231,6 +231,10 @@ def test_number():
     check_tokens(tokens, [NumberToken])
     assert str(tokens[1]) == '.1'
 
+    tokens = tokenize('(.1')
+    check_tokens(tokens, [RemainingToken, NumberToken])
+    assert str(tokens[2]) == '.1'
+
     tokens = tokenize('.123')
     check_tokens(tokens, [NumberToken])
 
@@ -346,6 +350,18 @@ def test_number():
     check_tokens(tokens, [RemainingToken, NumberToken])
 
     tokens = tokenize("+0x1e'A5")
+    check_tokens(tokens, [RemainingToken, NumberToken])
+
+    tokens = tokenize("0xca'fe'ba'be")
+    check_tokens(tokens, [NumberToken])
+
+    tokens = tokenize("(0xFFFF'FFFF'FFFF'FFFF)")
+    check_tokens(tokens, [RemainingToken, NumberToken, RemainingToken])
+
+    tokens = tokenize("invert(0xca'fe'ba'be")
+    check_tokens(tokens, [RemainingToken, NumberToken])
+
+    tokens = tokenize("invert((0xca'fe'ba'be")
     check_tokens(tokens, [RemainingToken, NumberToken])
 
 
