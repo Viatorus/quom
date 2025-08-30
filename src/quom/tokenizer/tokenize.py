@@ -6,7 +6,6 @@ from .number_tokenizer import scan_for_number
 from .preprocessor_tokenizer import scan_for_preprocessor
 from .quote_tokenizer import scan_for_quote
 from .remaining_tokenizer import scan_for_remaining
-from .symbol_tokenizer import scan_for_symbol
 from .token import Token, StartToken, EndToken
 from .whitespace_tokenizer import scan_for_whitespace
 
@@ -26,8 +25,6 @@ def tokenize(src) -> List[Token]:
             succeeded = scan_for_number(tokens, it)
         if not succeeded:
             succeeded = scan_for_preprocessor(tokens, it)
-        if not succeeded:
-            succeeded = scan_for_symbol(tokens, it)
         if not succeeded:
             scan_for_remaining(tokens, it)
 
