@@ -12,4 +12,5 @@ from .preprocessor_tokenizer import PreprocessorToken, PreprocessorIncludeToken,
     PreprocessorEndIfToken
 from .quote_tokenizer import QuoteToken, SingleQuoteToken, DoubleQuoteToken
 from .remaining_tokenizer import RemainingToken
+from .symbol_tokenizer import SymbolToken
 from .whitespace_tokenizer import WhitespaceToken, WhitespaceWhitespaceToken, LinebreakWhitespaceToken

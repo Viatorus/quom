@@ -5,8 +5,8 @@ import pytest
 from quom.tokenizer import CommentToken, CppCommentToken, CCommentToken, NumberToken, PreprocessorToken, \
     PreprocessorIncludeToken, PreprocessorUnknownIncludeToken, QuoteToken, SingleQuoteToken, DoubleQuoteToken, \
     RemainingToken, WhitespaceToken, WhitespaceWhitespaceToken, LinebreakWhitespaceToken, PreprocessorPragmaToken, \
-    PreprocessorPragmaOnceToken, PreprocessorDefineToken, PreprocessorIfNotDefinedToken, PreprocessorEndIfToken, \
-    tokenize, TokenizeError, Token, StartToken, EndToken
+    tokenize, TokenizeError, Token, StartToken, EndToken, SymbolToken, PreprocessorPragmaOnceToken, \
+    PreprocessorDefineToken, PreprocessorIfNotDefinedToken, PreprocessorEndIfToken
 
 
 def check_tokens(tokens: List[Token], res):
@@ -336,6 +336,18 @@ def test_number():
     tokens = tokenize("1'000'000'000")
     check_tokens(tokens, [NumberToken])
 
+    tokens = tokenize("0x0")
+    check_tokens(tokens, [NumberToken])
+
+    tokens = tokenize("0xA")
+    check_tokens(tokens, [NumberToken])
+
+    tokens = tokenize("+0x1'1")
+    check_tokens(tokens, [SymbolToken, NumberToken])
+
+    tokens = tokenize("+0x1e'A5")
+    check_tokens(tokens, [SymbolToken, NumberToken])
+
 
 def test_preprocessor():
     tokens = tokenize('#')
@@ -419,6 +431,12 @@ def test_preprocessor():
     assert isinstance(tokens[1].preprocessor_arguments[1], CCommentToken)
 
 
+def test_symbol():
+    for symbol in '+-*/%<>&!=?.,[]{}():|;~^':
+        tokens = tokenize(symbol)
+        check_tokens(tokens, [SymbolToken])
+
+
 def test_remaining():
     tokens = tokenize('abc')
     check_tokens(tokens, [RemainingToken])
@@ -435,10 +453,6 @@ def test_remaining():
     tokens = tokenize('_ab_c')
     check_tokens(tokens, [RemainingToken])
     assert str(tokens[1]) == '_ab_c'
-
-    for symbol in '+-*/%<>&!=?.,[]{}():|;~^':
-        tokens = tokenize(symbol)
-        check_tokens(tokens, [RemainingToken])
 
     tokens = tokenize('kwqjj8a8gja98gj9\b\1\123')
     check_tokens(tokens, [RemainingToken])
