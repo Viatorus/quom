@@ -231,6 +231,10 @@ def test_number():
     check_tokens(tokens, [NumberToken])
     assert str(tokens[1]) == '.1'
 
+    tokens = tokenize('(.1')
+    check_tokens(tokens, [RemainingToken, NumberToken])
+    assert str(tokens[2]) == '.1'
+
     tokens = tokenize('.123')
     check_tokens(tokens, [NumberToken])
 
@@ -326,6 +330,39 @@ def test_number():
 
     tokens = tokenize("12'd.z'.x1.'1")
     check_tokens(tokens, [NumberToken])
+
+    tokens = tokenize("1'000")
+    check_tokens(tokens, [NumberToken])
+
+    tokens = tokenize("1'000'000")
+    check_tokens(tokens, [NumberToken])
+
+    tokens = tokenize("1'000'000'000")
+    check_tokens(tokens, [NumberToken])
+
+    tokens = tokenize("0xE'0")
+    check_tokens(tokens, [NumberToken])
+
+    tokens = tokenize("0x0'E")
+    check_tokens(tokens, [NumberToken])
+
+    tokens = tokenize("+0x1'1")
+    check_tokens(tokens, [RemainingToken, NumberToken])
+
+    tokens = tokenize("+0x1e'A5")
+    check_tokens(tokens, [RemainingToken, NumberToken])
+
+    tokens = tokenize("0xca'fe'ba'be")
+    check_tokens(tokens, [NumberToken])
+
+    tokens = tokenize("(0xFFFF'FFFF'FFFF'FFFF)")
+    check_tokens(tokens, [RemainingToken, NumberToken, RemainingToken])
+
+    tokens = tokenize("invert(0xca'fe'ba'be")
+    check_tokens(tokens, [RemainingToken, NumberToken])
+
+    tokens = tokenize("invert((0xca'fe'ba'be")
+    check_tokens(tokens, [RemainingToken, NumberToken])
 
 
 def test_preprocessor():

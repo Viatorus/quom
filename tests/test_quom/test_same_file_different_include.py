@@ -19,6 +19,9 @@ FILE_MAIN_CPP = """
 RESULT = """
 
 int foo();
+
+int foo();
+
 """
 
 
