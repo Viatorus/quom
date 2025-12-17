@@ -33,9 +33,6 @@ class IncludeGuardsTracker:
     def __init__(self):
         self.__guards = []
 
-    def p(self):
-        print(self.__guards)
-
     def include_guard_found(self):
         self.__guards.append(1)
 
@@ -45,14 +42,15 @@ class IncludeGuardsTracker:
             self.__guards[i] += 1
 
     def endif_reached(self) -> bool:
-        drop = False
+        include_guard_ended = False
         # Decrease all guards by one level.
         for i in range(len(self.__guards)):
             self.__guards[i] -= 1
             if self.__guards[i] == 0:
-                drop = True
-        self.__guards = [x for x in self.__guards if x > 0]
-        return drop
+                include_guard_ended = True
+        if include_guard_ended:
+            self.__guards = [x for x in self.__guards if x > 0]
+        return include_guard_ended
 
 
 class Quom:
@@ -158,7 +156,7 @@ class Quom:
         if isinstance(token, PreprocessorIfNotDefinedToken):
             return self.__is_token_matching_include_guard(token)
 
-    def __is_token_matching_include_guard(self, token: PreprocessorIfNotDefinedToken | PreprocessorDefineToken):
+    def __is_token_matching_include_guard(self, token: Union[PreprocessorIfNotDefinedToken, PreprocessorDefineToken]):
         if self.__include_guard_format is None:
             return False
 
