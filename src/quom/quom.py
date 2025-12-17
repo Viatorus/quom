@@ -5,7 +5,8 @@ from queue import Queue
 from typing import TextIO, Union, List
 
 from .quom_error import QuomError
-from .tokenizer import tokenize, Token, CommentToken, PreprocessorToken, PreprocessorIfNotDefinedToken, \
+from .tokenizer import tokenize, Token, CommentToken, PreprocessorToken, PreprocessorIfToken, \
+    PreprocessorIfDefinedToken, PreprocessorIfNotDefinedToken, \
     PreprocessorDefineToken, PreprocessorEndIfToken, PreprocessorIncludeToken, PreprocessorPragmaOnceToken, \
     RemainingToken, LinebreakWhitespaceToken, EmptyToken, StartToken, EndToken, WhitespaceToken
 
@@ -26,6 +27,30 @@ def contains_only_whitespace_and_comment_tokens(tokens: List[Token]):
         if not isinstance(token, (WhitespaceToken, CommentToken, EndToken)):
             return False
     return True
+
+
+class IncludeGuardsTracker:
+    def __init__(self):
+        self.__guards = []
+
+    def include_guard_found(self):
+        self.__guards.append(1)
+
+    def if_reached(self):
+        # Increase all guards by one level.
+        for i in range(len(self.__guards)):
+            self.__guards[i] += 1
+
+    def endif_reached(self) -> bool:
+        include_guard_ended = False
+        # Decrease all guards by one level.
+        for i in range(len(self.__guards)):
+            self.__guards[i] -= 1
+            if self.__guards[i] == 0:
+                include_guard_ended = True
+        if include_guard_ended:
+            self.__guards = [x for x in self.__guards if x > 0]
+        return include_guard_ended
 
 
 class Quom:
@@ -50,6 +75,7 @@ class Quom:
         self.__cont_lb = CONTINUOUS_LINE_BREAK_START
         self.__used_linesep = None
         self.__prev_token = EmptyToken()
+        self.__include_guards_tracker = IncludeGuardsTracker()
 
         self.__process_file(Path(), src_file_path, False, True)
 
@@ -102,7 +128,7 @@ class Quom:
         if isinstance(token, StartToken) or isinstance(token, EndToken):
             return
 
-        if (not is_main_header and self.__is_pragma_once(token)) or self.__is_include_guard(token):
+        if (not is_main_header and self.__is_pragma_once(token)) or self.__is_part_of_include_guard(token):
             token = token.preprocessor_tokens[-2]
             if not isinstance(token, LinebreakWhitespaceToken):
                 return
@@ -127,21 +153,34 @@ class Quom:
         return False
 
     def __is_include_guard(self, token: Token):
+        if isinstance(token, PreprocessorIfNotDefinedToken):
+            return self.__is_token_matching_include_guard(token)
+
+    def __is_token_matching_include_guard(self, token: Union[PreprocessorIfNotDefinedToken, PreprocessorDefineToken]):
         if self.__include_guard_format is None:
             return False
 
+        # Find first remaining token matching the include guard format.
+        i, remaining_token = find_token(token.preprocessor_arguments, RemainingToken)
+        if remaining_token and self.__include_guard_format.match(str(remaining_token).strip()) and \
+                contains_only_whitespace_and_comment_tokens(token.preprocessor_arguments[i + 1:]):
+            return True
+        return False
+
+    def __is_part_of_include_guard(self, token: Token):
+        if self.__include_guard_format is None:
+            return False
+
+        if isinstance(token, (PreprocessorIfToken, PreprocessorIfDefinedToken, PreprocessorIfNotDefinedToken)):
+            self.__include_guards_tracker.if_reached()
+
         if isinstance(token, (PreprocessorIfNotDefinedToken, PreprocessorDefineToken)):
-            # Find first remaining token matching the include guard format.
-            i, remaining_token = find_token(token.preprocessor_arguments, RemainingToken)
-            if remaining_token and self.__include_guard_format.match(str(remaining_token).strip()) and \
-                    contains_only_whitespace_and_comment_tokens(token.preprocessor_arguments[i + 1:]):
+            if self.__is_token_matching_include_guard(token):
+                if isinstance(token, PreprocessorIfNotDefinedToken):
+                    self.__include_guards_tracker.include_guard_found()
                 return True
         elif isinstance(token, PreprocessorEndIfToken):
-            # Find first comment token matching the include guard format.
-            i, comment_token = find_token(token.preprocessor_arguments, CommentToken)
-            if comment_token and self.__include_guard_format.match(str(comment_token.content).strip()) and \
-                    contains_only_whitespace_and_comment_tokens(token.preprocessor_arguments[i + 1:]):
-                return True
+            return self.__include_guards_tracker.endif_reached()
         return False
 
     def __find_possible_source_file(self, header_file_path: Path) -> Union[Path, None]:

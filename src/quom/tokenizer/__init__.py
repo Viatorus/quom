@@ -8,7 +8,8 @@ from .tokenize_error import TokenizeError
 from .comment_tokenizer import CommentToken, CppCommentToken, CCommentToken
 from .number_tokenizer import NumberToken
 from .preprocessor_tokenizer import PreprocessorToken, PreprocessorIncludeToken, PreprocessorUnknownIncludeToken, \
-    PreprocessorPragmaToken, PreprocessorPragmaOnceToken, PreprocessorDefineToken, PreprocessorIfNotDefinedToken, \
+    PreprocessorPragmaToken, PreprocessorPragmaOnceToken, PreprocessorDefineToken, PreprocessorIfToken, \
+    PreprocessorIfDefinedToken, PreprocessorIfNotDefinedToken, \
     PreprocessorEndIfToken
 from .quote_tokenizer import QuoteToken, SingleQuoteToken, DoubleQuoteToken
 from .remaining_tokenizer import RemainingToken
