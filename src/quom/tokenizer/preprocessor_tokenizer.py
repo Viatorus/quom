@@ -48,6 +48,14 @@ class PreprocessorDefineToken(PreprocessorToken):
     pass
 
 
+class PreprocessorIfToken(PreprocessorToken):
+    pass
+
+
+class PreprocessorIfDefinedToken(PreprocessorToken):
+    pass
+
+
 class PreprocessorIfNotDefinedToken(PreprocessorToken):
     pass
 
@@ -156,6 +164,12 @@ def scan_for_preprocessor(tokens: List[Token], it: LineWrapIterator):
         elif name == 'define':
             scan_for_line_end(it, preprocessor_tokens)
             preprocessor_token = PreprocessorDefineToken(start, it)
+        elif name == 'if':
+            scan_for_line_end(it, preprocessor_tokens)
+            preprocessor_token = PreprocessorIfToken(start, it)
+        elif name == 'ifdef':
+            scan_for_line_end(it, preprocessor_tokens)
+            preprocessor_token = PreprocessorIfDefinedToken(start, it)
         elif name == 'ifndef':
             scan_for_line_end(it, preprocessor_tokens)
             preprocessor_token = PreprocessorIfNotDefinedToken(start, it)
