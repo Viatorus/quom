@@ -24,6 +24,8 @@ def main(args: List[str]):
                         help='Regex format of the include guard. Default: %(default)s')
     parser.add_argument('--trim', '-t', action='store_true', default=True,
                         help='Reduce continuous line breaks to one. Default: %(default)s')
+    parser.add_argument('--no-trim', dest='trim', action='store_false',
+                        help='Do not reduce continuous line breaks.')
     parser.add_argument('--include_directory', '-I', type=Path, action='append', default=[],
                         help='Add include directories for header files.')
     parser.add_argument('--source_directory', '-S', type=str, action='append', default=['.'],
