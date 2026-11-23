@@ -258,3 +258,16 @@ def test_main(fs):
 
     main(['main.hpp', 'result.hpp', '-S', '.'])
     assert Path('result.hpp').read_text() == RESULT_NORMAL
+
+
+def test_main_trim(fs):
+    init()
+
+    main(['main.hpp', 'result.hpp', '--trim'])
+    assert Path('result.hpp').read_text() == RESULT_NORMAL
+
+    main(['main.hpp', 'result.hpp', '-t'])
+    assert Path('result.hpp').read_text() == RESULT_NORMAL
+
+    main(['main.hpp', 'result.hpp', '--no-trim'])
+    assert Path('result.hpp').read_text() == RESULT_NORMAL_WITHOUT_TRIM
