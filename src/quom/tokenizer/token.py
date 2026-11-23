@@ -18,8 +18,6 @@ class EmptyToken(Token):
     def __init__(self):
         super().__init__(RawIterator(''), RawIterator(''))
 
-        print(self)
-
 
 class StartToken(Token):
     pass
