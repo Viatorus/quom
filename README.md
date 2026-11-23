@@ -20,12 +20,12 @@ At the end there will be one single file with all your header and sources joined
 pip install --user quom
 ```
 
-Requires Python 3.7 or later.
+Requires Python 3.9 or later.
 
 ## How to use it
 
 ```
-usage: quom [-h] [--stitch format] [--include_guard format] [--trim]
+usage: quom [-h] [--stitch format] [--include_guard format] [--trim | --no-trim | -t]
             input output
 
 Single header generator for C/C++ libraries.
@@ -41,7 +41,8 @@ optional arguments:
                         (e.g. // ~> stitch <~). Default: None (at the end of the main file)
   --include_guard format, -g format
                         Regex format of the include guard. Default: None
-  --trim, -t            Reduce continuous line breaks to one. Default: True
+  --trim, --no-trim, -t
+                        Reduce continuous line breaks to one. Default: True
   --include_directory INCLUDE_DIRECTORY, -I INCLUDE_DIRECTORY
                         Add include directories for header files.
   --source_directory SOURCE_DIRECTORY, -S SOURCE_DIRECTORY
